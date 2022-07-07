@@ -1,0 +1,7 @@
+{
+  "name": "bells-and-whistles",
+  "main": "app.ts",
+  "scripts": {
+    "start": "deno run --allow-all app.ts"
+  }
+}
