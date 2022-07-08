@@ -1,6 +1,6 @@
 import { expect } from 'https://deno.land/x/expect@v0.2.9/mod.ts';
 import { describe, it, run } from 'https://deno.land/x/machiatto@v0.1.3/mod.ts';
-import { db as store } from './db.ts';
+import { db as store } from '../src/db.ts';
 
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
