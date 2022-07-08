@@ -9,20 +9,27 @@ const constants = {
 const world = {
   state: {
     power: {
-      /** positive power (available) on the bus */
-      bus: 0,
-      /** negative power (used) on the bus */
-      draw: 100,
       battery: {
         capacity: 1000,
         last_updated: Date.now(),
       },
     },
+    fuel_cells: {
+      fc1: {
+        on: false,
+      },
+    },
+  },
+  calculated_state: {
+    /** positive power (available) on the bus */
+    bus: 0,
+    /** negative power (used) on the bus */
+    draw: 100,
   },
   inputs: {
     power: {
-      master: 0,
-      battery: 0,
+      master: false,
+      battery: false,
     },
   },
 };
