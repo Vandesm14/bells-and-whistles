@@ -1,16 +1,13 @@
 import { ld } from 'https://deno.land/x/deno_lodash/mod.ts';
 
 const splitPath = (path: string) => path.split(/[,./]/g);
-const pathToRef = (obj: Record<string, any>, path: string) =>
+const pathToRef = (obj: Store, path: string) =>
   splitPath(path).reduce((obj, part) => {
     return obj[part];
   }, obj);
 
-const crawl = (
-  obj: Record<string, any>,
-  fn?: (key: string, value: any) => void
-): Record<string, any> => {
-  const paths: Record<string, any> = {};
+const crawl = (obj: Store, fn?: (key: string, value: any) => void): Store => {
+  const paths: Store = {};
   const queue = Object.keys(obj);
   while (queue.length > 0) {
     const path = queue.shift();
@@ -24,24 +21,18 @@ const crawl = (
   return paths;
 };
 
-const object = {
-  home: {
-    config: {
-      a: 2,
-    },
-    b: 3,
-  },
-  c: 4,
-};
+type Store = Record<string, any>;
+type Reducer = (data: Store) => Store;
 
-const db = (init?: Record<string, any>) => {
-  let data = init ?? {};
+export const db = (init?: Store) => {
+  let data = structuredClone(init) ?? {};
   const stamps: Map<string, Date> = new Map(
     Object.entries(crawl(data)).map(([key]) => [key, new Date()])
   );
 
-  /** A pure transaction: Finds all of the changed values and updates the respective timestamps of modification */
-  const pure = (newState: Record<string, any>) => {
+  /** A pure transaction: Finds all of the changed values and updates the respective timestamps */
+  const pure = (fn: Reducer) => {
+    const newState = fn(structuredClone(data));
     const flat = crawl(newState);
     const flatData = crawl(data);
 
@@ -60,8 +51,6 @@ const db = (init?: Record<string, any>) => {
       )
     );
 
-    console.log({ added, removed });
-
     Array.from(added).forEach(([path]) => {
       stamps.set(path, new Date());
 
@@ -70,18 +59,15 @@ const db = (init?: Record<string, any>) => {
     });
     Array.from(removed).forEach(([path]) => stamps.delete(path));
 
-    console.log({ data, stamps });
-
     data = newState;
+    return db;
   };
 
   return {
     pure,
     stamps,
-    data,
+    get data() {
+      return data;
+    },
   };
 };
-
-const { pure, stamps, data } = db({ a: 2, c: 3, d: 4 });
-
-setTimeout(() => pure({ a: 1, b: 2, c: 3 }), 500);
