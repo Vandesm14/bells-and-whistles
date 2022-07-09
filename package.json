@@ -2,6 +2,8 @@
   "name": "bells-and-whistles",
   "main": "app.ts",
   "scripts": {
-    "start": "deno run --allow-all app.ts"
+    "start": "deno run --allow-all src/app.ts",
+    "test": "deno test --allow-all tests",
+    "test:watch": "deno test --allow-all --watch tests"
   }
 }
