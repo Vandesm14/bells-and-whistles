@@ -1,0 +1,27 @@
+{
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 8,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true,
+      "experimentalObjectRestSpread": true
+    }
+  },
+  "env": {
+    "browser": true,
+    "commonjs": true
+  },
+  "rules": {
+    "indent": ["error", 2],
+    "no-unused-vars": "warn",
+    "no-duplicate-imports": "warn",
+    "no-console": "error",
+    "no-duplicate-case": "warn",
+    "no-empty": "warn",
+    "no-lonely-if": "warn",
+    "prefer-const": "warn",
+    "no-unused-expressions": "warn",
+    "no-unused-labels": "warn"
+  }
+}

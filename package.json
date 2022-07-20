@@ -1,9 +1,13 @@
 {
   "name": "bells-and-whistles",
-  "main": "app.ts",
   "scripts": {
-    "start": "deno run --allow-all src/app.ts",
+    "start": "parcel src/index.html",
     "test": "deno test --allow-all tests",
     "test:watch": "deno test --allow-all --watch tests"
+  },
+  "dependencies": {
+    "parcel": "^2.6.2",
+    "preact": "^10.10.0",
+    "typescript": "^4.7.4"
   }
 }
