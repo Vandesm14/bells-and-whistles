@@ -1,6 +1,5 @@
 import { render } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { parseJsonSourceFileConfigFileContent } from 'typescript';
+import { useState } from 'preact/hooks';
 
 const world = {
   state: {
@@ -38,7 +37,7 @@ function engine(state: State): State {
   state.engine.last_update = Date.now();
   if (state.engine.switches.master) {
     const engineState = Object.entries(state.engine.states)
-      .filter(([name, val]) => val.min <= state.engine.N1)
+      .filter(([_, val]) => val.min <= state.engine.N1)
       .slice(-1)[0];
     if (!engineState) throw new Error('Could not find engine state');
 
