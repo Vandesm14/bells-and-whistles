@@ -1,28 +1,10 @@
 import { render } from 'preact';
-import { useEffect, useReducer, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 
 const world = {
   events: [] as UIEvent[],
   state: {
     engine: {
-      states: {
-        start: {
-          min: 0,
-          speed: 0.1,
-        },
-        ignition: {
-          min: 1,
-          speed: 2,
-        },
-        rising: {
-          min: 8,
-          speed: 1,
-        },
-        idle: {
-          min: 10,
-          speed: 0,
-        },
-      },
       current_state: '',
       last_update: Date.now(),
       N1: 0,
@@ -34,11 +16,34 @@ const world = {
   },
 };
 
+const constants = {
+  engine: {
+    states: {
+      start: {
+        min: 0,
+        speed: 0.1,
+      },
+      ignition: {
+        min: 1,
+        speed: 2,
+      },
+      rising: {
+        min: 8,
+        speed: 1,
+      },
+      idle: {
+        min: 10,
+        speed: 0,
+      },
+    },
+  },
+};
+
 const engine: System = (world) => {
   const { state, events } = world;
   const diff = Date.now() - state.engine.last_update;
   state.engine.last_update = Date.now();
-  const engineState = Object.entries(state.engine.states)
+  const engineState = Object.entries(constants.engine.states)
     .filter(([_, val]) => val.min <= state.engine.N1)
     .slice(-1)[0];
   if (!engineState) throw new Error('Could not find engine state');
