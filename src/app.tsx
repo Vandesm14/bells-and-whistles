@@ -1,7 +1,8 @@
 import { render } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useReducer, useState } from 'preact/hooks';
 
 const world = {
+  events: [] as UIEvent[],
   state: {
     engine: {
       states: {
@@ -32,7 +33,8 @@ const world = {
   },
 };
 
-function engine(state: State): State {
+const engine: System = (world) => {
+  const { state, events } = world;
   const diff = Date.now() - state.engine.last_update;
   state.engine.last_update = Date.now();
   if (state.engine.switches.master) {
@@ -49,31 +51,68 @@ function engine(state: State): State {
     state.engine.N1 = 0;
   }
 
-  return state;
-}
+  const triggers: TriggerList = {
+    'engine/switches/master': (event) => {
+      world.state.engine.switches.master =
+        (event.target as HTMLInputElement)?.checked ?? false;
+    },
+  };
 
-const systems: Reducer[] = [engine];
+  Object.entries(triggers).forEach(([tag, fn]) => {
+    const event = events.find((event) => event.tag === tag);
+    if (event) fn(event.event);
+  });
 
-type State = typeof world['state'];
-type Reducer = (state: State) => State;
+  return world;
+};
+
+const systems: System[] = [engine];
+
+type World = typeof world;
+type System = (world: World) => World;
+type UIEvent = {
+  event: Event;
+  tag: string;
+};
+
+type Trigger = (event: Event) => void;
+type TriggerList = Record<string, Trigger>;
 
 const pipe =
-  (...fns: Reducer[]) =>
-  (arg: State) =>
+  (...fns: System[]) =>
+  (arg: World) =>
     fns.reduce((val, fn) => fn(val), arg);
 
-function tick(state: State): State {
-  state = structuredClone(state);
-  state = pipe(...systems)(state);
-  return state;
-}
+const tick: System = (world: World) => {
+  world = { ...world, state: structuredClone(world.state) };
+  world = pipe(...systems)(world);
+  world.events = [];
+  return world;
+};
 
 const App = () => {
-  const [state, setState] = useState<State>(world.state);
+  const [state, setState] = useState<World>(world);
+  useEffect(() => {
+    setInterval(() => {
+      setState((world) => tick(world));
+    }, 100);
+  }, []);
 
-  setInterval(() => setState(tick), 0);
+  const addEvent = (event: Event, tag: UIEvent['tag']) =>
+    setState((world) => ({
+      ...world,
+      events: [...world.events, { event, tag }],
+    }));
 
-  return <pre>{JSON.stringify(state, null, 2)}</pre>;
+  return (
+    <main>
+      <pre>{JSON.stringify(state, null, 2)}</pre>
+      <input
+        type="checkbox"
+        onChange={(e) => addEvent(e, 'engine/switches/master')}
+      />
+    </main>
+  );
 };
 
 render(<App />, document.body);
