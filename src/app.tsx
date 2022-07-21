@@ -27,7 +27,8 @@ const world = {
       last_update: Date.now(),
       N1: 0,
       switches: {
-        master: true,
+        master: false,
+        start: false,
       },
     },
   },
@@ -37,12 +38,15 @@ const engine: System = (world) => {
   const { state, events } = world;
   const diff = Date.now() - state.engine.last_update;
   state.engine.last_update = Date.now();
-  if (state.engine.switches.master) {
-    const engineState = Object.entries(state.engine.states)
-      .filter(([_, val]) => val.min <= state.engine.N1)
-      .slice(-1)[0];
-    if (!engineState) throw new Error('Could not find engine state');
+  const engineState = Object.entries(state.engine.states)
+    .filter(([_, val]) => val.min <= state.engine.N1)
+    .slice(-1)[0];
+  if (!engineState) throw new Error('Could not find engine state');
 
+  if (
+    state.engine.switches.master &&
+    !(engineState[0] === 'start' && !state.engine.switches.start)
+  ) {
     state.engine.N1 += (diff / 1000) * engineState[1].speed;
     state.engine.current_state = engineState[0];
   } else if (state.engine.N1 > 0) {
@@ -56,12 +60,18 @@ const engine: System = (world) => {
       world.state.engine.switches.master =
         (event.target as HTMLInputElement)?.checked ?? false;
     },
+    'engine/switches/start': (event) => {
+      world.state.engine.switches.start =
+        (event.target as HTMLInputElement)?.checked ?? false;
+    },
   };
 
   Object.entries(triggers).forEach(([tag, fn]) => {
     const event = events.find((event) => event.tag === tag);
     if (event) fn(event.event);
   });
+
+  state.engine.N1 = Math.max(state.engine.N1, 0);
 
   return world;
 };
@@ -107,10 +117,20 @@ const App = () => {
   return (
     <main>
       <pre>{JSON.stringify(state, null, 2)}</pre>
-      <input
-        type="checkbox"
-        onChange={(e) => addEvent(e, 'engine/switches/master')}
-      />
+      <div>
+        <input
+          type="checkbox"
+          onChange={(e) => addEvent(e, 'engine/switches/master')}
+        />
+        <span>Master</span>
+      </div>
+      <div>
+        <input
+          type="checkbox"
+          onChange={(e) => addEvent(e, 'engine/switches/start')}
+        />
+        <span>Starter</span>
+      </div>
     </main>
   );
 };
