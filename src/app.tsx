@@ -121,7 +121,7 @@ const App = () => {
 
   return (
     <main>
-      <pre>{JSON.stringify(state, null, 2)}</pre>
+      <pre>{JSON.stringify(state.state, null, 2)}</pre>
       <div>
         <input
           type="checkbox"
