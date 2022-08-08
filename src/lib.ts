@@ -15,3 +15,9 @@ export const pipe =
   (...fns: System[]) =>
   (arg: World) =>
     fns.reduce((val, fn) => fn(val), arg);
+
+export const runTriggers = (triggers: TriggerList, events: WorldEvent[]) =>
+  Object.entries(triggers).forEach(([tag, fn]) => {
+    const event = events.find((event) => event.tag === tag);
+    if (event) fn(event.event);
+  });

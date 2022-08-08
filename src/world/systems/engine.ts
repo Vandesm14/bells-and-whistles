@@ -1,8 +1,9 @@
-import { System, TriggerList } from '../../lib';
+import { runTriggers, System, TriggerList } from '../../lib';
 import { constants } from '../index';
 
 const engine: System = (world) => {
   const { state, events } = world;
+
   const diff = Date.now() - state.engine.last_update;
   state.engine.last_update = Date.now();
   const engineState = Object.entries(constants.engine.states)
@@ -33,10 +34,7 @@ const engine: System = (world) => {
     },
   };
 
-  Object.entries(triggers).forEach(([tag, fn]) => {
-    const event = events.find((event) => event.tag === tag);
-    if (event) fn(event.event);
-  });
+  runTriggers(triggers, events);
 
   state.engine.N1 = Math.max(state.engine.N1, 0);
 
