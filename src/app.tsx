@@ -1,57 +1,8 @@
 import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 
-import type { System, TriggerList, World, WorldEvent } from './types';
-import { constants, world } from './world';
-
-const engine: System = (world) => {
-  const { state, events } = world;
-  const diff = Date.now() - state.engine.last_update;
-  state.engine.last_update = Date.now();
-  const engineState = Object.entries(constants.engine.states)
-    .filter(([_, val]) => val.min <= state.engine.N1)
-    .slice(-1)[0];
-  if (!engineState) throw new Error('Could not find engine state');
-
-  if (
-    state.engine.switches.master &&
-    !(engineState[0] === 'start' && !state.engine.switches.start)
-  ) {
-    state.engine.N1 += (diff / 1000) * engineState[1].speed;
-    state.engine.current_state = engineState[0];
-  } else if (state.engine.N1 > 0) {
-    state.engine.N1 -= diff / 1000;
-  } else {
-    state.engine.N1 = 0;
-  }
-
-  const triggers: TriggerList = {
-    'engine/switches/master': (event) => {
-      world.state.engine.switches.master =
-        (event.target as HTMLInputElement)?.checked ?? false;
-    },
-    'engine/switches/start': (event) => {
-      world.state.engine.switches.start =
-        (event.target as HTMLInputElement)?.checked ?? false;
-    },
-  };
-
-  Object.entries(triggers).forEach(([tag, fn]) => {
-    const event = events.find((event) => event.tag === tag);
-    if (event) fn(event.event);
-  });
-
-  state.engine.N1 = Math.max(state.engine.N1, 0);
-
-  return world;
-};
-
-const systems: System[] = [engine];
-
-const pipe =
-  (...fns: System[]) =>
-  (arg: World) =>
-    fns.reduce((val, fn) => fn(val), arg);
+import { pipe, System, World, WorldEvent } from './lib';
+import { world, systems } from './world';
 
 const tick: System = (world: World) => {
   world = { ...world, state: structuredClone(world.state) };

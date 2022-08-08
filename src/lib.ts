@@ -10,3 +10,8 @@ export type WorldEvent = {
 
 export type Trigger = (event: Event) => void;
 export type TriggerList = Record<string, Trigger>;
+
+export const pipe =
+  (...fns: System[]) =>
+  (arg: World) =>
+    fns.reduce((val, fn) => fn(val), arg);

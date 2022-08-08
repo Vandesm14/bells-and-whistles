@@ -1,4 +1,4 @@
-import { World } from './types';
+import { World } from '../lib';
 
 export const world: World = {
   events: [],
@@ -14,6 +14,7 @@ export const world: World = {
     },
   },
 };
+
 export const constants = {
   engine: {
     states: {
@@ -36,3 +37,5 @@ export const constants = {
     },
   },
 };
+
+export * from './systems';
