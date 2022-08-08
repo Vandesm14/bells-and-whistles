@@ -1,5 +1,6 @@
 import { memo } from '../lib';
 
+// this needs to have some delay so we can verify that it's faster
 const add = async (a: number, b: number): Promise<number> =>
   new Promise((res) => setTimeout(() => res(a + b), 50));
 
@@ -24,9 +25,6 @@ describe('memo', () => {
 
     const initial = second - first;
     const withMemo = third - second;
-
-    console.log({ initial, withMemo });
-    console.log({ first, second, third });
 
     expect(withMemo).toBeLessThan(initial);
   });
