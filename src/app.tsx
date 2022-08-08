@@ -1,43 +1,8 @@
 import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 
-const world = {
-  events: [] as UIEvent[],
-  state: {
-    engine: {
-      current_state: '',
-      last_update: Date.now(),
-      N1: 0,
-      switches: {
-        master: false,
-        start: false,
-      },
-    },
-  },
-};
-
-const constants = {
-  engine: {
-    states: {
-      start: {
-        min: 0,
-        speed: 0.1,
-      },
-      ignition: {
-        min: 1,
-        speed: 2,
-      },
-      rising: {
-        min: 8,
-        speed: 1,
-      },
-      idle: {
-        min: 10,
-        speed: 0,
-      },
-    },
-  },
-};
+import type { System, TriggerList, World, WorldEvent } from './types';
+import { constants, world } from './world';
 
 const engine: System = (world) => {
   const { state, events } = world;
@@ -83,16 +48,6 @@ const engine: System = (world) => {
 
 const systems: System[] = [engine];
 
-type World = typeof world;
-type System = (world: World) => World;
-type UIEvent = {
-  event: Event;
-  tag: string;
-};
-
-type Trigger = (event: Event) => void;
-type TriggerList = Record<string, Trigger>;
-
 const pipe =
   (...fns: System[]) =>
   (arg: World) =>
@@ -113,7 +68,7 @@ const App = () => {
     }, 100);
   }, []);
 
-  const addEvent = (event: Event, tag: UIEvent['tag']) =>
+  const addEvent = (event: Event, tag: WorldEvent['tag']) =>
     setState((world) => ({
       ...world,
       events: [...world.events, { event, tag }],
