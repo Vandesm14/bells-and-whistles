@@ -4,6 +4,9 @@ import { memo } from '../lib';
 const add = async (a: number, b: number): Promise<number> =>
   new Promise((res) => setTimeout(() => res(a + b), 50));
 
+const objectAdd = async (args: { a: number; b: number }): Promise<number> =>
+  new Promise((res) => setTimeout(() => res(args.a + args.b), 50));
+
 describe('memo', () => {
   let memoAdd = memo(add);
 
@@ -21,6 +24,20 @@ describe('memo', () => {
     await memoAdd(2, 2);
     const second = Date.now();
     await memoAdd(2, 2);
+    const third = Date.now();
+
+    const initial = second - first;
+    const withMemo = third - second;
+
+    expect(withMemo).toBeLessThan(initial);
+  });
+
+  it('should support object-based args', async () => {
+    const objAdd = memo(objectAdd);
+    const first = Date.now();
+    await objAdd({ a: 2, b: 2 });
+    const second = Date.now();
+    await objAdd({ a: 2, b: 2 });
     const third = Date.now();
 
     const initial = second - first;
