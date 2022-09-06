@@ -1,9 +1,6 @@
 import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 
-import { pipe, System, World, WorldEvent } from './lib';
-import { world, systems } from './world';
-
 const tick: System = (world: World) => {
   world = { ...world, state: structuredClone(world.state) };
   world = pipe(...systems)(world);
@@ -18,12 +15,6 @@ const App = () => {
       setState((world) => tick(world));
     }, 100);
   }, []);
-
-  const addEvent = (event: Event, tag: WorldEvent['tag']) =>
-    setState((world) => ({
-      ...world,
-      events: [...world.events, { event, tag }],
-    }));
 
   return (
     <main>
