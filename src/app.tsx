@@ -1,15 +1,20 @@
-import { render } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from 'react';
+import { render } from 'react-dom';
+import { KV, Store } from './lib/state';
 
-const tick: System = (world: World) => {
-  world = { ...world, state: structuredClone(world.state) };
-  world = pipe(...systems)(world);
-  world.events = [];
-  return world;
-};
+export type System = (state: Store) => Store;
+
+export const pipe =
+  (...fns: System[]) =>
+  (arg: Store) =>
+    fns.reduce((val, fn) => fn(val), arg);
+
+const systems: System[] = [];
+
+const tick: System = (state: Store) => pipe(...systems)(state);
 
 const App = () => {
-  const [state, setState] = useState<World>(world);
+  const [state, setState] = useState<Store>({});
   useEffect(() => {
     setInterval(() => {
       setState((world) => tick(world));
@@ -18,18 +23,26 @@ const App = () => {
 
   return (
     <main>
-      <pre>{JSON.stringify(state.state, null, 2)}</pre>
+      <pre>{JSON.stringify(state, null, 2)}</pre>
       <div>
         <input
           type="checkbox"
-          onChange={(e) => addEvent(e, 'engine/switches/master')}
+          onChange={(e) =>
+            setState((world) =>
+              KV(world).set('switch/master', e.target.checked).get()
+            )
+          }
         />
         <span>Master</span>
       </div>
       <div>
         <input
           type="checkbox"
-          onChange={(e) => addEvent(e, 'engine/switches/start')}
+          onChange={(e) =>
+            setState((world) =>
+              KV(world).set('switch/starter', e.target.checked).get()
+            )
+          }
         />
         <span>Starter</span>
       </div>
