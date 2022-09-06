@@ -2,67 +2,92 @@ import { KV } from '../lib/state';
 
 describe('state', () => {
   it('should set and get a value', () => {
-    const kv = new KV();
+    let kv = KV();
 
-    kv.set('foo', 'bar');
+    kv = kv.set('foo', 'bar');
     expect(kv.get('foo')).toBe('bar');
   });
 
   it('should allow setting objects', () => {
-    const kv = new KV();
+    let kv = KV();
 
-    kv.set('test/a', { b: 1 });
-    kv.set('test/a/b', 2);
-    kv.set('test/c', { d: { e: 3 } });
+    kv = kv
+      .set('test/a', { b: 1 })
+      .set('test/a/b', 2)
+      .set('test/c', { d: { e: 3 } });
 
     expect(kv.get('test')).toEqual({ a: { b: 2 }, c: { d: { e: 3 } } });
   });
 
-  it('should get a nested property', () => {
-    const kv = new KV();
+  it('should persist with non-chained calls', () => {
+    let kv = KV();
 
-    kv.set('test/a', 1);
-    kv.set('test/b', 2);
+    kv = kv.set('foo', 'bar');
+    kv = kv.set('test/a', { b: 1 });
+
+    expect(kv.get()).toEqual({ foo: 'bar', test: { a: { b: 1 } } });
+  });
+
+  it('should be immutable when setting values', () => {
+    let obj = { a: 1 };
+    let kv = KV(obj);
+
+    kv = kv.set('foo', 'bar');
+    obj['a'] = 2;
+
+    expect(obj).toEqual({ a: 2 });
+    expect(kv.get()).toEqual({ foo: 'bar', a: 1 });
+  });
+
+  it('should get a nested property', () => {
+    let kv = KV();
+
+    kv = kv.set('test/a', 1).set('test/b', 2);
 
     expect(kv.get('test/a')).toEqual(1);
     expect(kv.get('test/b')).toEqual(2);
   });
 
   it('should get all nested properties', () => {
-    const kv = new KV();
+    let kv = KV();
 
-    kv.set('test/a', 1);
-    kv.set('test/b', 2);
-    kv.set('test/c/c', 3);
+    kv = kv.set('test/a', 1).set('test/b', 2).set('test/c/c', 3);
 
     expect(kv.get()).toEqual({ test: { a: 1, b: 2, c: { c: 3 } } });
   });
 
   it('should overwrite a property', () => {
-    const kv = new KV();
+    let kv = KV();
 
-    kv.set('test/a', 1);
-    kv.set('test/a', 2);
+    kv = kv.set('test/a', 1).set('test/a', 2);
 
     expect(kv.get('test/a')).toEqual(2);
   });
 
   it('should delete a property', () => {
-    const kv = new KV();
+    let kv = KV();
 
-    kv.set('test/a', 1);
-    kv.delete('test/a');
+    kv = kv.set('test/a', 1).delete('test/a');
 
     expect(kv.get('test')).toEqual({});
   });
 
   it('should deep delete a property', () => {
-    const kv = new KV();
+    let kv = KV();
 
-    kv.set('test/a', 1);
-    kv.set('test/b', 2);
-    kv.delete('test');
+    kv = kv.set('test/a', 1).set('test/b', 2).delete('test');
 
+    expect(kv.get()).toEqual({});
+  });
+
+  it('should be immutable when deleting values', () => {
+    let obj = { a: 1 };
+    let kv = KV(obj);
+
+    kv = kv.delete('a');
+    obj['a'] = 2;
+
+    expect(obj).toEqual({ a: 2 });
     expect(kv.get()).toEqual({});
   });
 });
