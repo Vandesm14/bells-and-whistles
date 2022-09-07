@@ -3,6 +3,7 @@ import { render } from 'react-dom';
 import { Slider } from './components/Slider';
 import { Switch } from './components/Switch';
 import { collapse, init, pipe, System, World } from './lib/world';
+import EngineMfd from './assets/svg/EngineMfd';
 
 const FRAME_RATE = 30;
 const perSecond = (constant: number) => constant / FRAME_RATE / 2;
@@ -93,6 +94,7 @@ const App = () => {
             borderRadius: '50%',
           }}
         />
+        <EngineMfd value={state.apu.rpm / 100} />
       </div>
     </main>
   );
