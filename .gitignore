@@ -1,3 +1,9 @@
+# nodejs
 node_modules/
+
+# parcel
 .parcel-cache/
 dist/
+
+# typescript
+*.tsbuildinfo
