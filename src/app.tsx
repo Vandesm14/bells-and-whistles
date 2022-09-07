@@ -13,6 +13,7 @@ const systems: System[] = [
     let apu = world.apu;
     if (apu.master) {
       // Internal Engine Logic
+      // https://www.flight-mechanic.com/wp-content/uploads/2017/03/5-14.jpg
       apu = collapse<typeof apu>(
         {
           0: (apu) => ({ ...apu, starter: true, ignition: false, fuel: 0 }),
@@ -26,16 +27,27 @@ const systems: System[] = [
         apu.rpm
       )(apu);
 
-      // Math
-
+      ///
+      // ========== Math ==========
+      //
+      // Throttle target
       const target = 55 + apu.throttle * 45;
-      const acceleration =
-        Number(apu.starter) * perSecond(2) + apu.fuel * perSecond(1);
-
       const diff = target - apu.rpm;
-      const velocity = diff > 0 ? acceleration : -acceleration;
-      const rpm = apu.rpm + velocity;
 
+      // Add more speed if we're further away
+      const plusThrottle = apu.rpm <= 55 ? 0 : Math.abs(diff * perSecond(1));
+
+      // Add up max acceleration
+      const acceleration =
+        Number(apu.starter) * perSecond(2) +
+        apu.fuel * perSecond(1) +
+        plusThrottle;
+
+      // If we're below target, use negative acceleration
+      const velocity = diff > 0 ? acceleration : -acceleration;
+
+      // Add velocity to RPM
+      const rpm = apu.rpm + velocity;
       apu = { ...apu, rpm };
     } else {
       apu.fuel = 0;
