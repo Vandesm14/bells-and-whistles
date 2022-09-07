@@ -4,7 +4,8 @@
     "start": "parcel src/index.html",
     "build": "parcel build src/index.html",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "ts-check": "tsc --noEmit --watch"
   },
   "dependencies": {
     "@xstate/react": "^3.0.0",

@@ -9,7 +9,7 @@ interface SetOptions {
 }
 
 export interface KV {
-  get(key?: string): Store;
+  get<T = Store>(key?: string): T;
   set(key: string, value: any, opts?: SetOptions): KV;
   bulkSet(arr: Array<[string, any]>): KV;
   delete(key: string): KV;
@@ -19,9 +19,9 @@ export function KV(init?: Store): KV {
   const separators = /[./]/;
   let _store = structuredClone(init || {});
   return {
-    get<T>(key?: string): T | Store {
+    get<T = Store>(key?: string): T {
       if (!key) {
-        return _store;
+        return _store as T;
       } else {
         const keys = key.split(separators);
         let value = _store;
@@ -30,7 +30,7 @@ export function KV(init?: Store): KV {
           value = value[key];
         }
 
-        return value;
+        return value as T;
       }
     },
     set<T>(key: string, value: T, opts?: SetOptions): KV {
@@ -80,8 +80,8 @@ export function KV(init?: Store): KV {
 export function KVMut(init?: Store): KV {
   let kv = KV(init);
   return {
-    get<T>(key?: string): T | Store {
-      return kv.get(key);
+    get<T = Store>(key?: string) {
+      return kv.get<T>(key);
     },
     set<T>(key: string, value: T) {
       kv = kv.set(key, value);

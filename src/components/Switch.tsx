@@ -1,8 +1,9 @@
-import { KV, Store } from '../lib/state';
+import { KV } from '../lib/state';
 import type React from 'react';
+import { World } from '../lib/world';
 
 export interface SwitchProps {
-  setState: React.Dispatch<React.SetStateAction<Store>>;
+  setState: React.Dispatch<React.SetStateAction<World>>;
   path: string;
   text: string;
 }
