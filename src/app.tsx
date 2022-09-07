@@ -13,28 +13,39 @@ export const pipe =
 
 const init = {
   framecount: 0,
-  momentary: {
-    test: {
-      prev: false,
-      curr: false,
-      state: 'off',
-    },
-  },
-  switch: {
-    test: false,
+  apu: {
+    master: false,
+    lastUpdate: 0,
+    N1: 0,
+    flow: 0,
   },
 };
 
-const systems: System[] = [
-  (state) => ({ ...state, framecount: state.framecount + 1 }),
-  (world) => {
-    const kv = KVMut(world);
-    const { curr, prev } = kv.get('momentary.test');
-    const state = curr ? (prev ? 'on' : 'rising') : prev ? 'falling' : 'off';
+const FRAME_RATE = 30;
+const perSecond = (constant: number) => constant / FRAME_RATE / 2;
 
-    return kv
-      .set('momentary.test', { prev: curr, curr, state }, { partial: true })
-      .get();
+const systems: System[] = [
+  (world) => ({ ...world, framecount: world.framecount + 1 }),
+  (world) => {
+    const apu = world.apu;
+    if (apu.master) {
+      if (apu.N1 < 10) {
+        // start
+        apu.flow = perSecond(1);
+      } else {
+        // ignition
+        apu.flow = perSecond(2 + apu.N1 / 20);
+      }
+
+      apu.N1 = Math.min(apu.N1 + apu.flow, 100);
+
+      return world;
+    }
+
+    apu.flow = 0;
+    apu.N1 = Math.max(apu.N1 - perSecond(1), 0);
+
+    return world;
   },
 ];
 
@@ -45,7 +56,7 @@ const App = () => {
   useEffect(() => {
     setInterval(() => {
       setState((world) => tick(world));
-    }, 1 / 30);
+    }, 1 / FRAME_RATE);
   }, []);
 
   return (
@@ -58,12 +69,7 @@ const App = () => {
           width: 'max-content',
         }}
       >
-        <Momentary
-          setState={setState}
-          path="momentary.test.curr"
-          text="Button"
-        />
-        <Switch setState={setState} path="switch.test" text="Switch" />
+        <Switch setState={setState} path="apu.master" text="Master" />
       </div>
     </main>
   );
