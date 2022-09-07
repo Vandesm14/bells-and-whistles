@@ -1,8 +1,8 @@
 # nodejs
 node_modules/
 
-# parcel
-.parcel-cache/
+# build
+dist.zip
 dist/
 
 # typescript

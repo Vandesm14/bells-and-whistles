@@ -2989,7 +2989,7 @@ merge-stream@^2.0.0:
   resolved "https://registry.yarnpkg.com/merge-stream/-/merge-stream-2.0.0.tgz#52823629a14dd00c9770fb6ad47dc6310f2c1f60"
   integrity sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==
 
-micromatch@^4.0.4:
+micromatch@^4.0.4, micromatch@^4.0.5:
   version "4.0.5"
   resolved "https://registry.yarnpkg.com/micromatch/-/micromatch-4.0.5.tgz#bc8999a7cbbf77cdc89f132f6e467051b49090c6"
   integrity sha512-DMy+ERcEW2q8Z2Po+WNXuw3c5YaUSFjAO5GsJqfEl7UjvtIuFKO6ZrKvcItdy98dwFI2N1tg3zNIdKaQT+aNdA==
@@ -3723,6 +3723,18 @@ v8-to-istanbul@^9.0.1:
     "@jridgewell/trace-mapping" "^0.3.12"
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^1.6.0"
+
+vite-plugin-html-config@^1.0.10:
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/vite-plugin-html-config/-/vite-plugin-html-config-1.0.10.tgz#1d0c16e410aadb1b8bc7a6aa16985b7693b9f914"
+  integrity sha512-qJCVKC/mR4BIy4EG7AHQ3nGo1BF+3fOjVIka0kXKQMlxT12dl9G5YKmjhLohDzySijOb03R2PzYiAdavwKkqQQ==
+
+vite-plugin-singlefile@^0.11.1:
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/vite-plugin-singlefile/-/vite-plugin-singlefile-0.11.1.tgz#4a309d72d91f67babf98d0ffb2ff67bc130a9077"
+  integrity sha512-ZTT3XA2AM7rOf4UGmEM+FmMht000Uuc6OJSdlYqddFE9y7IrGDnNhFVQ/TZQMAFzZ0dYX3JzknAmrdKWe6s0xg==
+  dependencies:
+    micromatch "^4.0.5"
 
 vite@^3.1.0:
   version "3.1.0"
