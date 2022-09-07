@@ -25,14 +25,11 @@ const systems: System[] = [
   (state) => ({ ...state, framecount: state.framecount + 1 }),
   (world) => {
     const kv = KVMut(world);
-    let prev = kv.get('momentary.test.prev');
-    const curr = kv.get('momentary.test.curr');
+    const { curr, prev } = kv.get('momentary.test');
     const state = curr ? (prev ? 'on' : 'rising') : prev ? 'falling' : 'off';
 
     return kv
-      .set('momentary.test.prev', curr)
-      .set('momentary.test.curr', curr)
-      .set('momentary.test.state', state)
+      .set('momentary.test', { prev: curr, curr, state }, { partial: true })
       .get();
   },
 ];

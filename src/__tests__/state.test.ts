@@ -87,6 +87,16 @@ describe('kv', () => {
 
       expect(kv.get('test/a')).toEqual(2);
     });
+
+    it('should allow partial updates', () => {
+      let kv = KV();
+
+      kv = kv
+        .set('test/a', { b: 1 })
+        .set('test/a', { c: 2 }, { partial: true });
+
+      expect(kv.get('test/a')).toEqual({ b: 1, c: 2 });
+    });
   });
 
   describe('delete', () => {

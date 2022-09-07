@@ -4,9 +4,13 @@ function last<T>(arr: Array<T>): T {
   return arr[arr.length - 1];
 }
 
-interface KV {
+interface SetOptions {
+  partial?: boolean;
+}
+
+export interface KV {
   get(key?: string): Store;
-  set(key: string, value: any): KV;
+  set(key: string, value: any, opts?: SetOptions): KV;
   bulkSet(arr: Array<[string, any]>): KV;
   delete(key: string): KV;
 }
@@ -29,7 +33,7 @@ export function KV(init?: Store): KV {
         return value;
       }
     },
-    set<T>(key: string, value: T) {
+    set<T>(key: string, value: T, opts?: SetOptions): KV {
       const keys = key.split(separators);
       let store = _store;
       for (const key of keys.slice(0, -1)) {
@@ -40,7 +44,11 @@ export function KV(init?: Store): KV {
         store = store[key];
       }
 
-      store[last(keys)] = value;
+      if (opts?.partial) {
+        store[last(keys)] = { ...store[last(keys)], ...value };
+      } else {
+        store[last(keys)] = value;
+      }
       return this;
     },
     bulkSet(obj: Array<[string, any]>) {
