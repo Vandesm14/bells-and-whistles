@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { render } from 'react-dom';
-import { Momentary } from './components/Momentary';
+import { Slider } from './components/Slider';
 import { Switch } from './components/Switch';
-import { KVMut, Store } from './lib/state';
-import { init, pipe, System, World } from './lib/world';
+import { collapse, init, pipe, System, World } from './lib/world';
 
 const FRAME_RATE = 30;
 const perSecond = (constant: number) => constant / FRAME_RATE / 2;
@@ -13,16 +12,37 @@ const systems: System[] = [
   (world) => {
     let apu = world.apu;
     if (apu.master) {
-      if (apu.rpm < 10) {
-        apu = { ...apu, starter: true, ignition: true };
-      } else if (apu.rpm) {
-      }
+      // Internal Engine Logic
+      apu = collapse<typeof apu>(
+        {
+          0: (apu) => ({ ...apu, starter: true, ignition: false, fuel: 0 }),
+          5: (apu) => ({ ...apu, ignition: true }),
+          10: (apu) => ({ ...apu, fuel: 1 }),
+          20: (apu) => ({ ...apu, fuel: 3 }),
+          40: (apu) => ({ ...apu, ignition: false }),
+          50: (apu) => ({ ...apu, starter: false }),
+          55: (apu) => ({ ...apu, fuel: 2 }),
+        },
+        apu.rpm
+      )(apu);
+
+      // Math
+
+      const target = 55 + apu.throttle * 45;
+      const acceleration =
+        Number(apu.starter) * perSecond(2) + apu.fuel * perSecond(1);
+
+      const diff = target - apu.rpm;
+      const velocity = diff > 0 ? acceleration : -acceleration;
+      const rpm = apu.rpm + velocity;
+
+      apu = { ...apu, rpm };
+    } else {
+      apu.fuel = 0;
+      apu.rpm = Math.max(apu.rpm - perSecond(2), 0);
     }
 
-    apu.flow = 0;
-    apu.rpm = Math.max(apu.rpm - perSecond(1), 0);
-
-    return world;
+    return { ...world, apu };
   },
 ];
 
@@ -47,6 +67,7 @@ const App = () => {
         }}
       >
         <Switch setState={setState} path="apu.master" text="Master" />
+        <Slider setState={setState} path="apu.throttle" text="Throttle" />
       </div>
     </main>
   );
