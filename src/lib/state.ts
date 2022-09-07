@@ -34,22 +34,26 @@ export function KV(init?: Store): KV {
       }
     },
     set<T>(key: string, value: T, opts?: SetOptions): KV {
-      const keys = key.split(separators);
-      let store = _store;
-      for (const key of keys.slice(0, -1)) {
-        if (!store[key]) {
-          store[key] = {};
+      if (value === undefined) {
+        return this.delete(key);
+      } else {
+        const keys = key.split(separators);
+        let store = _store;
+        for (const key of keys.slice(0, -1)) {
+          if (!store[key]) {
+            store[key] = {};
+          }
+
+          store = store[key];
         }
 
-        store = store[key];
+        if (opts?.partial) {
+          store[last(keys)] = { ...store[last(keys)], ...value };
+        } else {
+          store[last(keys)] = value;
+        }
+        return this;
       }
-
-      if (opts?.partial) {
-        store[last(keys)] = { ...store[last(keys)], ...value };
-      } else {
-        store[last(keys)] = value;
-      }
-      return this;
     },
     bulkSet(obj: Array<[string, any]>) {
       for (const [key, value] of obj) {

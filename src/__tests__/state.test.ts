@@ -50,6 +50,13 @@ describe('kv', () => {
 
       expect(kv.get()).toEqual({ foo: 'bar', test: { a: { b: 1 } } });
     });
+
+    it('should not allow undefined', () => {
+      let kv = KV();
+
+      kv = kv.set('foo', undefined);
+      expect(kv.get()).toEqual({});
+    });
   });
 
   describe('get', () => {
