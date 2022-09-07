@@ -12,13 +12,14 @@ interface KV {
 }
 
 export function KV(init?: Store): KV {
+  const separators = /[./]/;
   let _store = structuredClone(init || {});
   return {
-    get(key?: string): any | Store {
+    get<T>(key?: string): T | Store {
       if (!key) {
         return _store;
       } else {
-        const keys = key.split('/');
+        const keys = key.split(separators);
         let value = _store;
 
         for (const key of keys) {
@@ -28,8 +29,8 @@ export function KV(init?: Store): KV {
         return value;
       }
     },
-    set(key: string, value: any) {
-      const keys = key.split('/');
+    set<T>(key: string, value: T) {
+      const keys = key.split(separators);
       let store = _store;
       for (const key of keys.slice(0, -1)) {
         if (!store[key]) {
@@ -49,13 +50,37 @@ export function KV(init?: Store): KV {
       return this;
     },
     delete(key: string) {
-      const keys = key.split('/');
+      const keys = key.split(separators);
       let store = _store;
       for (const key of keys.slice(0, -1)) {
         store = store[key];
       }
 
       delete store[last(keys)];
+      return this;
+    },
+  };
+}
+
+/**
+ * A mutable version of KV. All methods will mutate the store, but not the original object.
+ */
+export function KVMut(init?: Store): KV {
+  let kv = KV(init);
+  return {
+    get<T>(key?: string): T | Store {
+      return kv.get(key);
+    },
+    set<T>(key: string, value: T) {
+      kv = kv.set(key, value);
+      return this;
+    },
+    bulkSet(obj: Array<[string, any]>) {
+      kv = kv.bulkSet(obj);
+      return this;
+    },
+    delete(key: string) {
+      kv = kv.delete(key);
       return this;
     },
   };

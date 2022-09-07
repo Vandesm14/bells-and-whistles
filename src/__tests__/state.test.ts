@@ -1,6 +1,6 @@
 import { KV } from '../lib/state';
 
-describe('state', () => {
+describe('kv', () => {
   describe('create', () => {
     it('should set and get a value', () => {
       let kv = KV();
@@ -69,6 +69,14 @@ describe('state', () => {
 
       expect(kv.get()).toEqual({ test: { a: 1, b: 2, c: { c: 3 } } });
     });
+
+    it('should support dots as separators', () => {
+      let kv = KV();
+
+      kv = kv.set('test.a', 1).set('test.b', 2).set('test.c.c', 3);
+
+      expect(kv.get('test.c')).toEqual({ c: 3 });
+    });
   });
 
   describe('update', () => {
@@ -108,5 +116,33 @@ describe('state', () => {
       expect(obj).toEqual({ a: 2 });
       expect(kv.get()).toEqual({});
     });
+  });
+});
+
+describe('kvmut', () => {
+  it('should create a value', () => {
+    let kv = KV();
+    kv.set('foo', 'bar');
+    expect(kv.get('foo')).toBe('bar');
+  });
+
+  it('should get all values', () => {
+    let kv = KV();
+    kv.set('foo', 'bar');
+    expect(kv.get()).toEqual({ foo: 'bar' });
+  });
+
+  it('should update a value', () => {
+    let kv = KV();
+    kv.set('foo', 'bar');
+    kv.set('foo', 'baz');
+    expect(kv.get('foo')).toBe('baz');
+  });
+
+  it('should delete a value', () => {
+    let kv = KV();
+    kv.set('foo', 'bar');
+    kv.delete('foo');
+    expect(kv.get('foo')).toBe(undefined);
   });
 });

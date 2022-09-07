@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { render } from 'react-dom';
-import { KV, Store } from './lib/state';
+import { KV, KVMut, Store } from './lib/state';
 
 export type System = (state: Store) => Store;
 
@@ -9,42 +9,68 @@ export const pipe =
   (arg: Store) =>
     fns.reduce((val, fn) => fn(val), arg);
 
-const systems: System[] = [];
+const init = {
+  count: 0,
+  momentary: {
+    test: {
+      prev: false,
+      curr: false,
+      // 'off', 'rising', 'on', 'falling'
+      state: 'off',
+    },
+    didRise: false,
+    didFall: false,
+  },
+};
 
-const tick: System = (state: Store) => pipe(...systems)(state);
+const systems: System[] = [
+  (state) => ({ ...state, count: state.count + 1 }),
+  (world) => {
+    const kv = KVMut(world);
+    let prev = kv.get('momentary.test.prev');
+    const curr = kv.get('momentary.test.curr');
+    const state = curr ? (prev ? 'on' : 'rising') : prev ? 'falling' : 'off';
+    kv.set('momentary.test.prev', curr);
+    if (state === 'falling') {
+      kv.set('momentary.didFall', true);
+    } else if (state === 'rising') {
+      kv.set('momentary.didRise', true);
+    }
+    return kv
+      .set('momentary.test.curr', curr)
+      .set('momentary.test.state', state)
+      .get();
+  },
+];
+
+const tick: System = (state: Store) => pipe(...systems)(structuredClone(state));
 
 const App = () => {
-  const [state, setState] = useState<Store>({});
+  const [state, setState] = useState<Store>(init);
   useEffect(() => {
     setInterval(() => {
       setState((world) => tick(world));
-    }, 100);
+    }, 1 / 60);
   }, []);
 
   return (
     <main>
       <pre>{JSON.stringify(state, null, 2)}</pre>
       <div>
-        <input
-          type="checkbox"
-          onChange={(e) =>
+        <button
+          onMouseDown={() =>
             setState((world) =>
-              KV(world).set('switch/master', e.target.checked).get()
+              KV(world).set('momentary.test.curr', true).get()
             )
           }
-        />
-        <span>Master</span>
-      </div>
-      <div>
-        <input
-          type="checkbox"
-          onChange={(e) =>
+          onMouseUp={() =>
             setState((world) =>
-              KV(world).set('switch/starter', e.target.checked).get()
+              KV(world).set('momentary.test.curr', false).get()
             )
           }
-        />
-        <span>Starter</span>
+        >
+          Click
+        </button>
       </div>
     </main>
   );
