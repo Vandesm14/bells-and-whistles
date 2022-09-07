@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { render } from 'react-dom';
-import { KV, KVMut, Store } from './lib/state';
+import { Momentary } from './components/Momentary';
+import { KVMut, Store } from './lib/state';
 
 export type System = (state: Store) => Store;
 
@@ -15,7 +16,6 @@ const init = {
     test: {
       prev: false,
       curr: false,
-      // 'off', 'rising', 'on', 'falling'
       state: 'off',
     },
     didRise: false,
@@ -57,20 +57,7 @@ const App = () => {
     <main>
       <pre>{JSON.stringify(state, null, 2)}</pre>
       <div>
-        <button
-          onMouseDown={() =>
-            setState((world) =>
-              KV(world).set('momentary.test.curr', true).get()
-            )
-          }
-          onMouseUp={() =>
-            setState((world) =>
-              KV(world).set('momentary.test.curr', false).get()
-            )
-          }
-        >
-          Click
-        </button>
+        <Momentary text="Button" setState={setState} />
       </div>
     </main>
   );
