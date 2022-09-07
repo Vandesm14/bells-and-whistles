@@ -11,32 +11,26 @@ export const pipe =
     fns.reduce((val, fn) => fn(val), arg);
 
 const init = {
-  count: 0,
+  framecount: 0,
   momentary: {
     test: {
       prev: false,
       curr: false,
       state: 'off',
     },
-    didRise: false,
-    didFall: false,
   },
 };
 
 const systems: System[] = [
-  (state) => ({ ...state, count: state.count + 1 }),
+  (state) => ({ ...state, framecount: state.framecount + 1 }),
   (world) => {
     const kv = KVMut(world);
     let prev = kv.get('momentary.test.prev');
     const curr = kv.get('momentary.test.curr');
     const state = curr ? (prev ? 'on' : 'rising') : prev ? 'falling' : 'off';
-    kv.set('momentary.test.prev', curr);
-    if (state === 'falling') {
-      kv.set('momentary.didFall', true);
-    } else if (state === 'rising') {
-      kv.set('momentary.didRise', true);
-    }
+
     return kv
+      .set('momentary.test.prev', curr)
       .set('momentary.test.curr', curr)
       .set('momentary.test.state', state)
       .get();
@@ -50,7 +44,7 @@ const App = () => {
   useEffect(() => {
     setInterval(() => {
       setState((world) => tick(world));
-    }, 1 / 60);
+    }, 1 / 30);
   }, []);
 
   return (

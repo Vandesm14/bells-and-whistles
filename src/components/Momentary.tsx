@@ -7,14 +7,16 @@ export interface MomentaryProps {
 }
 
 export function Momentary({ setState, text }: MomentaryProps) {
+  const setDown = () =>
+    setState((world) => KV(world).set('momentary.test.curr', true).get());
+  const setUp = () =>
+    setState((world) => KV(world).set('momentary.test.curr', false).get());
   return (
     <button
-      onMouseDown={() =>
-        setState((world) => KV(world).set('momentary.test.curr', true).get())
-      }
-      onMouseUp={() =>
-        setState((world) => KV(world).set('momentary.test.curr', false).get())
-      }
+      onMouseDown={setDown}
+      onMouseUp={setUp}
+      onKeyDown={setDown}
+      onKeyUp={setUp}
     >
       {text}
     </button>
