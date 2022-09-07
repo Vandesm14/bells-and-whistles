@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { render } from 'react-dom';
 import { Momentary } from './components/Momentary';
+import { Switch } from './components/Switch';
 import { KVMut, Store } from './lib/state';
 
 export type System = (state: Store) => Store;
@@ -18,6 +19,9 @@ const init = {
       curr: false,
       state: 'off',
     },
+  },
+  switch: {
+    test: false,
   },
 };
 
@@ -47,8 +51,19 @@ const App = () => {
   return (
     <main>
       <pre>{JSON.stringify(state, null, 2)}</pre>
-      <div>
-        <Momentary text="Button" setState={setState} />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: 'max-content',
+        }}
+      >
+        <Momentary
+          setState={setState}
+          path="momentary.test.curr"
+          text="Button"
+        />
+        <Switch setState={setState} path="switch.test" text="Switch" />
       </div>
     </main>
   );

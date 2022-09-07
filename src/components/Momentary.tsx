@@ -2,15 +2,14 @@ import { KV, Store } from '../lib/state';
 import type React from 'react';
 
 export interface MomentaryProps {
-  text: string;
   setState: React.Dispatch<React.SetStateAction<Store>>;
+  path: string;
+  text: string;
 }
 
-export function Momentary({ setState, text }: MomentaryProps) {
-  const setDown = () =>
-    setState((world) => KV(world).set('momentary.test.curr', true).get());
-  const setUp = () =>
-    setState((world) => KV(world).set('momentary.test.curr', false).get());
+export function Momentary({ setState, path, text }: MomentaryProps) {
+  const setDown = () => setState((world) => KV(world).set(path, true).get());
+  const setUp = () => setState((world) => KV(world).set(path, false).get());
   return (
     <button
       onMouseDown={setDown}
