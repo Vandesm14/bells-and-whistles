@@ -35,7 +35,7 @@ const systems: System[] = [
       const diff = target - apu.rpm;
 
       // Add more speed if we're further away
-      const plusThrottle = apu.rpm <= 55 ? 0 : Math.abs(diff * perSecond(1));
+      const plusThrottle = apu.rpm <= 55 ? 0 : Math.abs(diff * perSecond(0.8));
 
       // Add up max acceleration
       const acceleration =
@@ -47,12 +47,12 @@ const systems: System[] = [
       const velocity = diff > 0 ? acceleration : -acceleration;
 
       // Add velocity to RPM
-      const rpm = apu.rpm + velocity;
-      apu = { ...apu, rpm };
+      apu.rpm = apu.rpm + velocity;
     } else {
       apu.fuel = 0;
-      apu.rpm = Math.max(apu.rpm - perSecond(2), 0);
+      apu.rpm = Math.max(apu.rpm - perSecond(5), 0);
     }
+    apu.uiRotate = (apu.uiRotate + (apu.rpm / 60) * 30) % 360;
 
     return { ...world, apu };
   },
@@ -80,6 +80,19 @@ const App = () => {
       >
         <Switch setState={setState} path="apu.master" text="Master" />
         <Slider setState={setState} path="apu.throttle" text="Throttle" />
+
+        <img
+          src="https://e7.pngegg.com/pngimages/970/119/png-clipart-graphy-jet-engine-engine-photography-entrepreneurship.png"
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: `translate(-50%, -50%) rotate(${state.apu.uiRotate}deg)`,
+            width: '500px',
+            height: '500px',
+            borderRadius: '50%',
+          }}
+        />
       </div>
     </main>
   );

@@ -47,6 +47,7 @@ export const init = {
     ignition: false,
     fuel: 0,
     throttle: 0,
+    uiRotate: 0,
   },
 };
 
