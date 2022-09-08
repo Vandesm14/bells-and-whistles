@@ -41,7 +41,6 @@ const systems: System[] = [
     let apu = world.apu;
     if (apu.master) {
       // Internal Engine Logic
-      // https://www.flight-mechanic.com/wp-content/uploads/2017/03/5-14.jpg
       apu = collapse<typeof apu>(
         {
           0: (apu) => ({ ...apu, starter: true, fuel: 0 }),

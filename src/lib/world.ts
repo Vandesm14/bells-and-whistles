@@ -23,11 +23,10 @@ function compare(a: number, is: Comparator, b: number) {
   }
 }
 
-export const lerp = (a: number, b: number, t: number, min?: number) => {
-  // if diff is less than min, return b
+export function lerp(a: number, b: number, t: number, min?: number) {
   if (min && Math.abs(a - b) < min) return b;
   return a + (b - a) * t;
-};
+}
 
 /**
  * Collapses a set of systems into a single system that runs all systems either greater than or less than a value

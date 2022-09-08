@@ -91,7 +91,6 @@ export default function EngineMfd({ current, target }: EngineMfdProps) {
         ctx.strokeStyle = '#F19036';
         ctx.beginPath();
         ctx.lineWidth = 2;
-        // create a small circle at the end of the line and outside of the gauge
         ctx.arc(
           circle.x +
             (circle.radius + 10) *

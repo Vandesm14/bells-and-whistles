@@ -1,3 +1,20 @@
+# Resources
+
+## Engines
+
+### Engine Start Diagrams
+
+- https://www.flight-mechanic.com/wp-content/uploads/2017/03/5-14.jpg
+- https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEI6e6oDulHLLAkMbvNXcqJBDU6hX6cswoOg&usqp=CAU
+
+### Display Behavior
+
+- https://europe.content.twixlmedia.com/twixl-preview/e37527c12cbd8fc4effad5ac269b712b/content/bd6e86f32db9acd9d0fe4c2f763e36a2/18/images/fig.6%20-%20EWD%20takeoff.png?r=0.20562776366511382
+
+### Engine Start
+
+- https://www.youtube.com/watch?v=0OgEbs3ovOw
+
 # Problems
 
 ## Organization of Systems
