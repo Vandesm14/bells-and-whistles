@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Slider } from './components/Slider';
 import { Switch } from './components/Switch';
 import { collapse, init, pipe, System, World } from './lib/world';
@@ -70,7 +70,7 @@ const App = () => {
   }, []);
 
   return (
-    <main>
+    <>
       <pre>{JSON.stringify(state, null, 2)}</pre>
       <div
         style={{
@@ -94,10 +94,10 @@ const App = () => {
             borderRadius: '50%',
           }}
         />
-        <EngineMfd value={state.apu.rpm / 100} />
+        <EngineMfd current={state.apu.rpm / 100} target={state.apu.throttle} />
       </div>
-    </main>
+    </>
   );
 };
 
-render(<App />, document.body);
+createRoot(document.getElementById('root')!).render(<App />);

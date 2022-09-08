@@ -1,44 +1,130 @@
-import svgPath from 'svgpath';
+import React from 'react';
+import { createImportClause } from 'typescript';
+
+const degToRad = (deg: number) => (deg * Math.PI) / 180;
+
+const normalize = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  value: number
+) => {
+  return ((value - x1) * (y2 - x2)) / (y1 - x1) + x2;
+};
 
 export interface EngineMfdProps {
-  value: number;
+  current: number;
+  target: number;
 }
 
-export default function EngineMfd({ value }: EngineMfdProps) {
-  const OFFSET = 50;
+const WIDTH = 500;
+const HEIGHT = 515;
+
+export default function EngineMfd({ current, target }: EngineMfdProps) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const [ctx, setCtx] = React.useState<CanvasRenderingContext2D | null>(null);
+
+  React.useEffect(() => {
+    if (canvasRef.current) {
+      setCtx(canvasRef.current.getContext('2d'));
+    }
+  }, [canvasRef]);
+
+  React.useEffect(() => {
+    if (ctx) {
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      const circle = {
+        x: 200,
+        y: 200,
+        radius: 80,
+        from: -225,
+        to: -45,
+        get length() {
+          return this.to - this.from;
+        },
+      };
+
+      {
+        // Gauge
+        ctx.strokeStyle = 'white';
+        ctx.beginPath();
+        ctx.lineWidth = 4;
+        ctx.arc(
+          circle.x,
+          circle.y,
+          circle.radius,
+          degToRad(circle.from),
+          degToRad(circle.to)
+        );
+        ctx.stroke();
+        ctx.closePath();
+      }
+
+      {
+        // Current
+        ctx.strokeStyle = '#82FF80';
+        ctx.beginPath();
+        ctx.lineWidth = 4;
+        ctx.moveTo(circle.x, circle.y);
+        ctx.lineTo(
+          circle.x +
+            circle.radius *
+              Math.cos(
+                degToRad(circle.from + current * Math.abs(circle.length))
+              ),
+          circle.y +
+            circle.radius *
+              Math.sin(
+                degToRad(circle.from + current * Math.abs(circle.length))
+              )
+        );
+        ctx.stroke();
+        ctx.closePath();
+      }
+
+      {
+        // Target
+        ctx.strokeStyle = '#F19036';
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        // create a small circle at the end of the line and outside of the gauge
+        ctx.arc(
+          circle.x +
+            (circle.radius + 10) *
+              Math.cos(
+                degToRad(
+                  circle.from +
+                    normalize(0, 1, 0.55, 1, target) * Math.abs(circle.length)
+                )
+              ),
+          circle.y +
+            (circle.radius + 10) *
+              Math.sin(
+                degToRad(
+                  circle.from +
+                    normalize(0, 1, 0.55, 1, target) * Math.abs(circle.length)
+                )
+              ),
+          5,
+          0,
+          2 * Math.PI
+        );
+        ctx.stroke();
+        ctx.closePath();
+      }
+    }
+  }, [ctx, current, target]);
+
   return (
-    <svg
-      width="500"
-      height="515"
-      viewBox="0 0 500 515"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <g id="MFD">
-        <rect width="500" height="515" fill="#1F1F1F" />
-        <g id="N1">
-          <path
-            id="Subtract"
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M193.958 100.546C192.665 62.4699 161.391 32 123 32C83.7879 32 52.0001 63.7878 52.0001 103C52.0001 120.774 58.5309 137.022 69.3238 149.476C68.3482 150.407 67.3955 151.344 66.4661 152.286C54.966 139.105 48.0001 121.866 48.0001 103C48.0001 61.5786 81.5787 28 123 28C163.655 28 196.755 60.3477 197.966 100.709C196.645 100.634 195.309 100.579 193.958 100.546Z"
-            fill="#D9D9D9"
-          />
-          <g id="Pointer">
-            <rect
-              id="Pointer_2"
-              x="121.837"
-              y="101.635"
-              width="3.85619"
-              height="82.1546"
-              transform={`rotate(${
-                OFFSET + value * (270 - OFFSET)
-              } 121.837 101.635)`}
-              fill="#D9D9D9"
-            />
-          </g>
-        </g>
-      </g>
-    </svg>
+    <canvas
+      ref={canvasRef}
+      width={WIDTH}
+      height={HEIGHT}
+      style={{ border: '1px solid black' }}
+    />
   );
 }
