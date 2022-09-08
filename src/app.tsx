@@ -6,7 +6,7 @@ import { collapse, init, pipe, System, World } from './lib/world';
 import EngineMfd from './assets/svg/EngineMfd';
 
 const FRAME_RATE = 30;
-const perSecond = (constant: number) => constant / FRAME_RATE / 2;
+const perSecond = (constant: number) => constant / FRAME_RATE;
 
 const systems: System[] = [
   (world) => ({ ...world, framecount: world.framecount + 1 }),
@@ -66,7 +66,7 @@ const App = () => {
   useEffect(() => {
     setInterval(() => {
       setState((world) => tick(world));
-    }, 1 / FRAME_RATE);
+    }, 1000 / FRAME_RATE);
   }, []);
 
   return (
