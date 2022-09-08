@@ -23,6 +23,12 @@ function compare(a: number, is: Comparator, b: number) {
   }
 }
 
+export const lerp = (a: number, b: number, t: number, min?: number) => {
+  // if diff is less than min, return b
+  if (min && Math.abs(a - b) < min) return b;
+  return a + (b - a) * t;
+};
+
 /**
  * Collapses a set of systems into a single system that runs all systems either greater than or less than a value
  */
@@ -33,21 +39,23 @@ export function collapse<T>(
 ): System<T> {
   const comparator = mode ?? 'lte';
   const systems = Object.entries(list)
-    .filter(([key]) => compare(+key, comparator, val))
+    .filter(([key]) => compare(Number(key), comparator, val))
     .map(([, system]) => system);
   return (world: T) => pipe(...systems)(world);
 }
 
 export const init = {
   framecount: 0,
+  lastTS: 0,
+  ms: 0,
+  fps: 0,
   apu: {
+    RPM_MIN: 22,
     master: false,
     starter: false,
     rpm: 0,
-    ignition: false,
     fuel: 0,
     throttle: 0,
-    uiRotate: 0,
   },
 };
 

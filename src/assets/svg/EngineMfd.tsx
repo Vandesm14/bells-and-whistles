@@ -1,5 +1,5 @@
 import React from 'react';
-import { createImportClause } from 'typescript';
+import { init as world } from '../../lib/world';
 
 const degToRad = (deg: number) => (deg * Math.PI) / 180;
 
@@ -98,7 +98,8 @@ export default function EngineMfd({ current, target }: EngineMfdProps) {
               Math.cos(
                 degToRad(
                   circle.from +
-                    normalize(0, 1, 0.55, 1, target) * Math.abs(circle.length)
+                    normalize(0, 1, world.apu.RPM_MIN / 100, 1, target) *
+                      Math.abs(circle.length)
                 )
               ),
           circle.y +
@@ -106,7 +107,8 @@ export default function EngineMfd({ current, target }: EngineMfdProps) {
               Math.sin(
                 degToRad(
                   circle.from +
-                    normalize(0, 1, 0.55, 1, target) * Math.abs(circle.length)
+                    normalize(0, 1, world.apu.RPM_MIN / 100, 1, target) *
+                      Math.abs(circle.length)
                 )
               ),
           5,
