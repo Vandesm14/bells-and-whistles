@@ -4,6 +4,7 @@ import { Slider } from './components/Slider';
 import { Switch } from './components/Switch';
 import {
   collapse,
+  feature,
   init,
   normalize,
   pipe,
@@ -11,7 +12,7 @@ import {
   travel,
   World,
 } from './lib/world';
-import EngineMfd from './assets/svg/EngineMfd';
+import EngineMfd from './components/EngineMfd';
 
 const FRAME_RATE = 30;
 const perSecond = (constant: number) => constant / FRAME_RATE;
@@ -37,56 +38,70 @@ const stableInterval = (fn: () => void, interval: number) => {
   return () => cancelAnimationFrame(timer);
 };
 
-const systems: System[] = [
-  (world) => ({ ...world, framecount: world.framecount + 1 }),
-  (world) => ({
+const systems: System[] = feature({
+  framecount: (world) => ({ ...world, framecount: world.framecount + 1 }),
+  fps: (world) => ({
     ...world,
     ms: Date.now() - world.lastTS,
     fps: Math.round(1000 / (Date.now() - world.lastTS)),
     lastTS: Date.now(),
   }),
-  (world) => {
-    let apu = world.apu;
-    if (apu.master) {
-      // Internal Engine Logic
-      apu = collapse<typeof apu>(
-        {
-          0: (apu) => ({ ...apu, starter: true, injectors: false }),
-          5: (apu) => ({ ...apu, injectors: true }),
-          20: (apu) => ({ ...apu, starter: false }),
-        },
-        apu.rpm,
-        'lte'
-      )(apu);
+  fuel: pipe(
+    ...feature({
+      pump: (world) => {
+        const { fuel } = world;
+        const { throttle } = world.input;
 
-      ///
-      // ========== Math ==========
-      //
-      // Fuel Flow
-      if (apu.injectors)
-        apu.fuelFlow = travel(
-          apu.fuelFlow,
-          20,
-          perSecond(1 + apu.fuelFlow / 4)
-        );
+        if (fuel.pump) {
+          if (fuel.tank > 0) fuel.pressure = 1 + throttle;
+          return { ...world, fuel };
+        }
 
-      // RPM
-      const targetRpm = normalize(0, 1, 22, 100, apu.throttle);
-      const fromFuelFlow = apu.rpm > targetRpm ? 10 : apu.fuelFlow;
+        fuel.pressure = 0;
+        return { ...world, fuel };
+      },
+      // tank: (world) => {
+      //   const { fuel } = world;
+      //   fuel.tank -= perSecond(fuel.pressure);
+      //   return { ...world, fuel };
+      // },
+    })
+  ),
+  engine: pipe(
+    ...feature({
+      starter: (world) => {
+        const { engine } = world;
 
-      const delta = [travel(apu.rpm, targetRpm, perSecond(1 + fromFuelFlow))];
+        if (engine.input.starter) {
+          engine.startValve = true;
+          engine.rpmAccel.starter = travel(
+            engine.rpmAccel.starter,
+            25,
+            perSecond(2)
+          );
+        } else {
+          engine.startValve = false;
+          engine.rpmAccel.starter = 0;
+        }
 
-      apu.rpm = delta.reduce((a, b) => a + b, 0);
-    } else {
-      apu.injectors = false;
-      apu.fuelFlow = 0;
-      // apu.rpm = Math.max(apu.rpm - perSecond(5), 0);
-      apu.rpm = travel(apu.rpm, 0, perSecond(3));
-    }
+        return { ...world, engine };
+      },
+      rpmAccel: (world) => {
+        const { engine } = world;
+        // starter
+        //   The starter can only accelerate N2 to the N2_START value
+        // fuel
+        //   If the fuel valve is open and there is fuel pressure, the fuel will accelerate N2
 
-    return { ...world, apu };
-  },
-];
+        if (engine.rpmAccel.starter) {
+          engine.N2 = travel(engine.N2, engine.rpmAccel.starter, perSecond(1));
+        }
+
+        return { ...world, engine };
+      },
+    })
+  ),
+});
 
 const tick: System = (state: World) => pipe(...systems)(structuredClone(state));
 
@@ -108,9 +123,15 @@ const App = () => {
           width: 'max-content',
         }}
       >
-        <Switch setState={setState} path="apu.master" text="Master" />
-        <Slider setState={setState} path="apu.throttle" text="Throttle" />
-        <EngineMfd current={state.apu.rpm / 100} target={state.apu.throttle} />
+        <Switch path="fuel.pump" setState={setState} text="fuel pump" />
+        <Switch
+          path="engine.input.starter"
+          setState={setState}
+          text="starter"
+        />
+        <Switch path="engine.fuelValve" setState={setState} text="fuel valve" />
+        <Slider path="input.throttle" setState={setState} text="throttle" />
+        <EngineMfd N2={state.engine.N2} throttle={state.input.throttle} />
       </div>
     </>
   );

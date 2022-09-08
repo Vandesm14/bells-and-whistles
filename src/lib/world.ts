@@ -61,6 +61,17 @@ export function normalize(
 }
 
 /**
+ * A wrapper for Object.values() that returns an array of Systems
+ * This will have more functionality in the future (especially for debugging)
+ */
+export function feature<T = World>(
+  obj: Record<string, System<T>>,
+  name?: string
+): System<T>[] {
+  return Object.values(obj);
+}
+
+/**
  * Collapses a set of systems into a single system that runs all systems either greater than or less than a value
  */
 export function collapse<T>(
@@ -80,13 +91,41 @@ export const init = {
   lastTS: 0,
   ms: 0,
   fps: 0,
-  apu: {
-    RPM_MIN: 22,
-    master: false,
-    starter: false,
-    rpm: 0,
-    injectors: false,
-    fuelFlow: 0,
+  power: {
+    externalAvail: 0,
+    external: false,
+  },
+  fuel: {
+    tank: 1_000_000,
+    pump: false,
+    pressure: 0,
+  },
+  engine: {
+    // Constants
+    N1_IDLE: 15,
+    N2_IDLE: 56,
+    N2_START: 25,
+    N1_START: 5,
+
+    // State
+    extBleed: false,
+    startValve: false,
+    fuelValve: false,
+    igniter: false,
+    N1: 0,
+    N2: 0,
+    EGT: 0,
+    rpmAccel: {
+      fuel: 0,
+      starter: 0,
+    },
+
+    // Controls
+    input: {
+      starter: false,
+    },
+  },
+  input: {
     throttle: 0,
   },
 };
