@@ -15,11 +15,7 @@ export function Switch({ state, setState, path, text }: SwitchProps) {
 
   return (
     <label>
-      <input
-        type="checkbox"
-        onChange={change}
-        defaultChecked={KV(state).get(path)}
-      />
+      <input type="checkbox" onChange={change} checked={KV(state).get(path)} />
       {text}
     </label>
   );
