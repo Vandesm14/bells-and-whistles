@@ -115,9 +115,11 @@ export const init = {
     N1: 0,
     N2: 0,
     EGT: 0,
+
     rpmAccel: {
       fuel: 0,
       starter: 0,
+      total: 0,
     },
 
     // Controls

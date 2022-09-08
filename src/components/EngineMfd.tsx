@@ -33,7 +33,7 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
       from: -225,
       to: -45,
       get length() {
-        return this.to - this.from;
+        return Math.abs(this.to - this.from);
       },
     };
 
@@ -64,16 +64,14 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
           circle.radius *
             Math.cos(
               degToRad(
-                circle.from +
-                  normalize(0, 100, 0, 1, N2) * Math.abs(circle.length)
+                circle.from + normalize(0, 100, 0, 1, N2) * circle.length
               )
             ),
         circle.y +
           circle.radius *
             Math.sin(
               degToRad(
-                circle.from +
-                  normalize(0, 100, 0, 1, N2) * Math.abs(circle.length)
+                circle.from + normalize(0, 100, 0, 1, N2) * circle.length
               )
             )
       );
@@ -92,8 +90,8 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
             Math.cos(
               degToRad(
                 circle.from +
-                  normalize(0, 1, world.engine.N1_IDLE / 100, 1, throttle) *
-                    Math.abs(circle.length)
+                  normalize(0, 1, world.engine.N2_IDLE / 100, 1, throttle) *
+                    circle.length
               )
             ),
         circle.y +
@@ -101,16 +99,86 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
             Math.sin(
               degToRad(
                 circle.from +
-                  normalize(0, 1, world.engine.N1_IDLE / 100, 1, throttle) *
-                    Math.abs(circle.length)
+                  normalize(0, 1, world.engine.N2_IDLE / 100, 1, throttle) *
+                    circle.length
               )
             ),
         5,
         0,
         2 * Math.PI
       );
+
       ctx.stroke();
       ctx.closePath();
+    }
+
+    {
+      // Spokes
+      ctx.strokeStyle = 'white';
+      ctx.beginPath();
+      ctx.lineWidth = 3;
+
+      function spoke(
+        ctx: CanvasRenderingContext2D,
+        angle: number,
+        length = 10
+      ) {
+        ctx.moveTo(
+          circle.x +
+            circle.radius *
+              Math.cos(degToRad(circle.from + angle * circle.length)),
+          circle.y +
+            circle.radius *
+              Math.sin(degToRad(circle.from + angle * circle.length))
+        );
+        ctx.lineTo(
+          circle.x +
+            (circle.radius - length) *
+              Math.cos(degToRad(circle.from + angle * circle.length)),
+          circle.y +
+            (circle.radius - length) *
+              Math.sin(degToRad(circle.from + angle * circle.length))
+        );
+      }
+
+      // create a spoke for N2_START
+      spoke(ctx, normalize(0, 100, 0, 1, world.engine.N2_START));
+
+      for (let i = 0; i < 6; i++) {
+        spoke(ctx, 0.5 + i * 0.1);
+      }
+
+      ctx.stroke();
+      ctx.closePath();
+    }
+
+    {
+      // Labels
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 20px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      function label(
+        ctx: CanvasRenderingContext2D,
+        angle: number,
+        text: string,
+        length = 20
+      ) {
+        ctx.fillText(
+          text,
+          circle.x +
+            (circle.radius - length) *
+              Math.cos(degToRad(circle.from + angle * circle.length)),
+          circle.y +
+            (circle.radius - length) *
+              Math.sin(degToRad(circle.from + angle * circle.length))
+        );
+      }
+
+      // create a "5" lable for 50% and "10" for 100%
+      label(ctx, 0.5, '5');
+      label(ctx, 1, '10');
     }
   }
 

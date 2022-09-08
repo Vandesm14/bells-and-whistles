@@ -2,12 +2,13 @@ import { KV } from '../lib/state';
 import { World } from '../lib/world';
 
 export interface SliderProps {
+  state: World;
   setState: React.Dispatch<React.SetStateAction<World>>;
   path: string;
   text: string;
 }
 
-export function Slider({ setState, path, text }: SliderProps) {
+export function Slider({ state, setState, path, text }: SliderProps) {
   const change: React.ChangeEventHandler<HTMLInputElement> = (e) =>
     setState((world) => KV(world).set(path, Number(e.target.value)).get());
   return (
@@ -19,7 +20,7 @@ export function Slider({ setState, path, text }: SliderProps) {
         max="1"
         step="0.01"
         onChange={change}
-        defaultValue="0"
+        defaultValue={KV(state).get(path) ?? 0}
       />
     </label>
   );

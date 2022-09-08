@@ -86,16 +86,30 @@ const systems: System[] = feature({
 
         return { ...world, engine };
       },
+      fuel: (world) => {
+        const { engine } = world;
+        const { pressure } = world.fuel;
+
+        // the fuel can only combust if the engine reaches N2_START and beyond
+        // if the fuel pressure is at 1 (throttle idle), then N2 will rise to 56
+
+        if (engine.fuelValve && engine.N2 >= engine.N2_START) {
+          engine.rpmAccel.fuel = travel(
+            engine.rpmAccel.fuel,
+            normalize(1, 2, engine.N2_IDLE, 100, pressure),
+            perSecond(5)
+          );
+        } else {
+          engine.rpmAccel.fuel = 0;
+        }
+
+        return { ...world, engine };
+      },
       rpmAccel: (world) => {
         const { engine } = world;
-        // starter
-        //   The starter can only accelerate N2 to the N2_START value
-        // fuel
-        //   If the fuel valve is open and there is fuel pressure, the fuel will accelerate N2
 
-        if (engine.rpmAccel.starter) {
-          engine.N2 = travel(engine.N2, engine.rpmAccel.starter, perSecond(1));
-        }
+        engine.rpmAccel.total = engine.rpmAccel.starter + engine.rpmAccel.fuel;
+        engine.N2 = travel(engine.N2, engine.rpmAccel.total, perSecond(1));
 
         return { ...world, engine };
       },
@@ -105,8 +119,40 @@ const systems: System[] = feature({
 
 const tick: System = (state: World) => pipe(...systems)(structuredClone(state));
 
+function useLocalStorage<T>(key: string, initialValue: T) {
+  // use UseEffect to update the local storage when the state changes
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    try {
+      // Get from local storage by key
+      const item = window.localStorage.getItem(key);
+      // Parse stored json or if none return initialValue
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      // If error also return initialValue
+      console.log(error);
+      return initialValue;
+    }
+  });
+
+  const reset = () => {
+    setStoredValue(initialValue);
+  };
+
+  useEffect(() => {
+    try {
+      // Save state to local storage
+      window.localStorage.setItem(key, JSON.stringify(storedValue));
+    } catch (error) {
+      // A more advanced implementation would handle the error case
+      console.log(error);
+    }
+  });
+
+  return [storedValue, setStoredValue, reset] as const;
+}
+
 const App = () => {
-  const [state, setState] = useState<World>(init);
+  const [state, setState, reset] = useLocalStorage<World>('world', init);
   useEffect(() => {
     stableInterval(() => {
       setState((world) => tick(world));
@@ -123,15 +169,32 @@ const App = () => {
           width: 'max-content',
         }}
       >
-        <Switch path="fuel.pump" setState={setState} text="fuel pump" />
+        <Switch
+          path="fuel.pump"
+          state={state}
+          setState={setState}
+          text="fuel pump"
+        />
         <Switch
           path="engine.input.starter"
+          state={state}
           setState={setState}
           text="starter"
         />
-        <Switch path="engine.fuelValve" setState={setState} text="fuel valve" />
-        <Slider path="input.throttle" setState={setState} text="throttle" />
+        <Switch
+          path="engine.fuelValve"
+          state={state}
+          setState={setState}
+          text="fuel valve"
+        />
+        <Slider
+          path="input.throttle"
+          state={state}
+          setState={setState}
+          text="throttle"
+        />
         <EngineMfd N2={state.engine.N2} throttle={state.input.throttle} />
+        <button onClick={reset}>reset</button>
       </div>
     </>
   );
