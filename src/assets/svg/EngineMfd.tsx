@@ -1,17 +1,7 @@
 import React from 'react';
-import { init as world } from '../../lib/world';
+import { init as world, normalize } from '../../lib/world';
 
 const degToRad = (deg: number) => (deg * Math.PI) / 180;
-
-const normalize = (
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  value: number
-) => {
-  return ((value - x1) * (y2 - x2)) / (y1 - x1) + x2;
-};
 
 export interface EngineMfdProps {
   current: number;

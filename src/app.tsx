@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Slider } from './components/Slider';
 import { Switch } from './components/Switch';
-import { collapse, init, pipe, System, World } from './lib/world';
+import {
+  collapse,
+  init,
+  normalize,
+  pipe,
+  System,
+  travel,
+  World,
+} from './lib/world';
 import EngineMfd from './assets/svg/EngineMfd';
 
 const FRAME_RATE = 30;
@@ -43,8 +51,8 @@ const systems: System[] = [
       // Internal Engine Logic
       apu = collapse<typeof apu>(
         {
-          0: (apu) => ({ ...apu, starter: true, fuel: 0 }),
-          5: (apu) => ({ ...apu, fuel: 1 }),
+          0: (apu) => ({ ...apu, starter: true, injectors: false }),
+          5: (apu) => ({ ...apu, injectors: true }),
           20: (apu) => ({ ...apu, starter: false }),
         },
         apu.rpm,
@@ -54,28 +62,26 @@ const systems: System[] = [
       ///
       // ========== Math ==========
       //
-      // Throttle target
-      const target = apu.RPM_MIN + apu.throttle * (100 - apu.RPM_MIN);
-      const diff = target - apu.rpm;
+      // Fuel Flow
+      if (apu.injectors)
+        apu.fuelFlow = travel(
+          apu.fuelFlow,
+          20,
+          perSecond(1 + apu.fuelFlow / 4)
+        );
 
-      // Add more speed if we're further away
-      const plusThrottle =
-        apu.rpm <= apu.RPM_MIN ? 0 : Math.abs(diff * perSecond(0.8));
+      // RPM
+      const targetRpm = normalize(0, 1, 22, 100, apu.throttle);
+      const fromFuelFlow = apu.rpm > targetRpm ? 10 : apu.fuelFlow;
 
-      // Add up max acceleration
-      const acceleration =
-        Number(apu.starter) * perSecond(2) +
-        apu.fuel * perSecond(1) +
-        plusThrottle;
+      const delta = [travel(apu.rpm, targetRpm, perSecond(1 + fromFuelFlow))];
 
-      // If we're below target, use negative acceleration
-      const velocity = diff > 0 ? acceleration : -acceleration;
-
-      // Add velocity to RPM
-      apu.rpm = apu.rpm + velocity;
+      apu.rpm = delta.reduce((a, b) => a + b, 0);
     } else {
-      apu.fuel = 0;
-      apu.rpm = Math.max(apu.rpm - perSecond(5), 0);
+      apu.injectors = false;
+      apu.fuelFlow = 0;
+      // apu.rpm = Math.max(apu.rpm - perSecond(5), 0);
+      apu.rpm = travel(apu.rpm, 0, perSecond(3));
     }
 
     return { ...world, apu };

@@ -28,6 +28,38 @@ export function lerp(a: number, b: number, t: number, min?: number) {
   return a + (b - a) * t;
 }
 
+export function easeOut(a: number, b: number, t: number, min?: number) {
+  if (min && Math.abs(a - b) < min) return b;
+  return a + (b - a) * (1 - Math.pow(1 - t, 3));
+}
+
+export function easeInOut(a: number, b: number, t: number, min?: number) {
+  if (min && Math.abs(a - b) < min) return b;
+  return a + (b - a) * (1 - Math.pow(1 - t, 2));
+}
+
+export function clamp(a: number, min: number, max: number) {
+  return Math.min(Math.max(a, min), max);
+}
+
+export function travel(from: number, to: number, rate: number, min = rate) {
+  const diff = Math.abs(from - to);
+  const delta = from < to ? rate : -rate;
+  if (diff < min) return to;
+  return from + delta;
+  // return easeInOut(from, to, rate, min);
+}
+
+export function normalize(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  value: number
+) {
+  return ((value - x1) * (y2 - x2)) / (y1 - x1) + x2;
+}
+
 /**
  * Collapses a set of systems into a single system that runs all systems either greater than or less than a value
  */
@@ -53,7 +85,8 @@ export const init = {
     master: false,
     starter: false,
     rpm: 0,
-    fuel: 0,
+    injectors: false,
+    fuelFlow: 0,
     throttle: 0,
   },
 };
