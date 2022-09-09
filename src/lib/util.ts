@@ -44,3 +44,50 @@ export function normalize(
 export function logBase(base: number, value: number) {
   return Math.log(value) / Math.log(base);
 }
+
+/**
+ * Returns a boolean if the structure of the two objects (nested keys) are the same.
+ */
+export function structureIsEqual(
+  a: any,
+  b: any,
+  returnError: true
+): { isEqual: boolean; error: string; keys: string[] };
+export function structureIsEqual(a: any, b: any): boolean;
+export function structureIsEqual(
+  a: any,
+  b: any,
+  returnKeys?: boolean
+): boolean | { isEqual: boolean; error: string; keys: string[] } {
+  const errOrBool = (
+    returnKeys: boolean | undefined,
+    isEqual: boolean,
+    error?: string
+  ) => {
+    if (returnKeys) {
+      return { isEqual, error: error || '', keys: [] };
+    }
+    return isEqual;
+  };
+
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length)
+    return errOrBool(returnKeys, false, 'length');
+  if (Array.isArray(a) || Array.isArray(b))
+    return errOrBool(returnKeys, false, 'array');
+  for (const key of aKeys) {
+    if (!bKeys.includes(key))
+      return errOrBool(returnKeys, false, `missing key ${key}`);
+    if (
+      typeof a[key] === 'object' &&
+      typeof b[key] === 'object' &&
+      !Array.isArray(a[key]) &&
+      !Array.isArray(b[key])
+    ) {
+      const result = structureIsEqual(a[key], b[key], true);
+      if (!result.isEqual) return errOrBool(returnKeys, false, result.error);
+    }
+  }
+  return errOrBool(returnKeys, true);
+}

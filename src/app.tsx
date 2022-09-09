@@ -5,6 +5,7 @@ import { Switch } from './components/Switch';
 import { init, World, systems } from './lib/world';
 import EngineMfd from './components/EngineMfd';
 import { System, pipe, stableInterval, FRAME_RATE } from './lib/engine';
+import { structureIsEqual } from './lib/util';
 
 const tick: System = (state: World) => pipe(...systems)(structuredClone(state));
 
@@ -45,8 +46,25 @@ const App = () => {
   // const [state, setState] = useState<World>(init);
   // const reset = () => setState(init);
   useEffect(() => {
+    const result = structureIsEqual(state, init, true);
+    if (!result.isEqual) {
+      if (confirm(`Save is out of date, reset?\n\nReason: ${result.error}`))
+        reset();
+    }
+
     stableInterval(() => {
-      setState((world) => tick(world));
+      setState((world) => {
+        const then = Date.now();
+        world = tick(world);
+        const diff = Date.now() - then;
+
+        const { health } = world;
+
+        const ms = health.ms;
+        const poms = (diff / ms) * 100;
+        health.ticks = `${diff}ms (${poms.toFixed(2)}%)`;
+        return { ...world, health };
+      });
     }, 1000 / FRAME_RATE);
   }, []);
 

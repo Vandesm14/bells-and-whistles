@@ -15,10 +15,13 @@ export const constants = {
 };
 
 export const init = {
-  framecount: 0,
-  lastTS: 0,
-  ms: 0,
-  fps: 0,
+  health: {
+    framecount: 0,
+    lastTS: 0,
+    ms: 0,
+    fps: 0,
+    ticks: '',
+  },
   power: {
     externalAvail: 0,
     external: false,
@@ -58,12 +61,15 @@ const C = constants;
 
 export const systems: System[] = feature({
   // framecount: (world) => ({ ...world, framecount: world.framecount + 1 }),
-  fps: (world) => ({
-    ...world,
-    ms: Date.now() - world.lastTS,
-    fps: Math.round(1000 / (Date.now() - world.lastTS)),
-    lastTS: Date.now(),
-  }),
+  fps: (world) => {
+    const { health } = world;
+
+    health.ms = Date.now() - world.health.lastTS;
+    health.fps = Math.round(1000 / (Date.now() - world.health.lastTS));
+    health.lastTS = Date.now();
+
+    return { ...world, health };
+  },
   fuel: pipe(
     ...feature({
       avail: (world) => {
