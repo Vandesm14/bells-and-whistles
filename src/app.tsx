@@ -41,9 +41,9 @@ function useLocalStorage<T>(key: string, initialValue: T) {
 }
 
 const App = () => {
-  // const [state, setState, reset] = useLocalStorage<World>('world', init);
-  const [state, setState] = useState<World>(init);
-  const reset = () => setState(init);
+  const [state, setState, reset] = useLocalStorage<World>('world', init);
+  // const [state, setState] = useState<World>(init);
+  // const reset = () => setState(init);
   useEffect(() => {
     stableInterval(() => {
       setState((world) => tick(world));
@@ -84,11 +84,7 @@ const App = () => {
           setState={setState}
           text="throttle"
         />
-        <EngineMfd
-          N1={state.engine.N1.value}
-          N2={state.engine.N2.value}
-          throttle={state.input.throttle}
-        />
+        <EngineMfd N2={state.engine.N2.value} throttle={state.input.throttle} />
         <button onClick={reset}>reset</button>
       </div>
     </>

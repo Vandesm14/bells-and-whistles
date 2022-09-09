@@ -14,10 +14,6 @@ export interface Interpolation {
    */
   value: number;
   /**
-   * The amount of units to move per update
-   */
-  rate: number;
-  /**
    * The percentage from start to end
    */
   t: number;
@@ -29,31 +25,29 @@ export function generate(): Interpolation {
     end: 0,
     value: 0,
     t: 1,
-    rate: 0,
   };
 }
 
 export function begin(
   interpolation: Interpolation,
   start: number,
-  end: number,
-  rate: number
+  end: number
 ): Interpolation {
   interpolation.start = start;
   interpolation.end = end;
   interpolation.t = 0;
   interpolation.value = start;
-  interpolation.rate = rate;
   return interpolation;
 }
 
 export function update(
   interpolation: Interpolation,
+  rate: number,
   curve?: (a: number, b: number, t: number) => number
 ): Interpolation {
   const curveFn = curve ?? lerp;
 
-  const { start, end, rate, t, value } = interpolation;
+  const { start, end, t, value } = interpolation;
   const length = Math.abs(start - end);
   const rateToPercent = rate / length;
 

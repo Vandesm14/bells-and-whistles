@@ -5,7 +5,7 @@ import { constants as C } from '../lib/world';
 const degToRad = (deg: number) => (deg * Math.PI) / 180;
 
 export interface EngineMfdProps {
-  N1: number;
+  // N1: number;
   N2: number;
   throttle: number;
 }
@@ -146,14 +146,19 @@ function guage(
     ctx.lineWidth = 3;
 
     spoke(ctx, circle, normalize(0, 100, 0, 1, C.engine.N2_START));
-    spoke(ctx, circle, normalize(0, 100, 0, 1, C.engine.N2_IDLE));
+    // spoke(ctx, circle, normalize(0, 100, 0, 1, C.engine.N2_IDLE));
     spoke(ctx, circle, normalize(0, 100, 0, 1, C.engine.N2_MAX));
+
+    for (let i = 0; i < 6; i++) {
+      spoke(ctx, circle, 0.5 + i * 0.1);
+    }
 
     ctx.stroke();
     ctx.closePath();
   }
 
-  if (style === 'N1') {
+  // if (style === 'N1') {
+  {
     // Labels
     ctx.fillStyle = 'white';
     ctx.font = 'bold 20px Arial';
@@ -204,7 +209,7 @@ function guage(
   }
 }
 
-export default function EngineMfd({ N1, N2, throttle }: EngineMfdProps) {
+export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [ctx, setCtx] = React.useState<CanvasRenderingContext2D | null>(null);
 
@@ -219,18 +224,18 @@ export default function EngineMfd({ N1, N2, throttle }: EngineMfdProps) {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-    guage(ctx, 100, 100, normalize(0, 100, 0, 1, N1), 'N1');
-    text(ctx, 100 + 80 / 2, 100 + 80 / 2 - 25, 'N1', '#82FF80');
+    // guage(ctx, 100, 100, normalize(0, 100, 0, 1, N1), 'N1');
+    // text(ctx, 100 + 80 / 2, 100 + 80 / 2 - 25, 'N1', '#82FF80');
 
     guage(
       ctx,
       100,
-      300,
+      100,
       normalize(0, 100, 0, 1, N2),
       'N2',
       normalize(0, 1, C.engine.N2_IDLE / 100, 1, throttle)
     );
-    text(ctx, 100 + 80 / 2, 300 + 80 / 2 - 25, 'N2', '#82FF80');
+    text(ctx, 100 + 80 / 2, 100 + 80 / 2 - 25, 'N2', '#82FF80');
   }
 
   return (

@@ -1,6 +1,6 @@
 import { changeDetector, interpolation } from './blocks';
 import { System, feature, perSecond, pipe } from './engine';
-import { lerp, normalize, pointsToCurve } from './util';
+import { lerp, normalize, smooth } from './util';
 
 export const constants = {
   engine: {
@@ -32,8 +32,8 @@ export const init = {
     // State
     startValve: false,
     fuelValve: false,
-    N1: interpolation.generate(),
     N2: interpolation.generate(),
+    N1: 0,
     EGT: 0,
 
     targetN2: {
@@ -85,7 +85,8 @@ export const systems: System[] = feature({
 
         if (engine.input.starter) {
           engine.startValve = true;
-          engine.targetN2.starter = C.engine.N2_START;
+          engine.targetN2.starter =
+            engine.N2.value <= C.engine.N2_START ? C.engine.N2_START : 0;
         } else {
           engine.startValve = false;
           engine.targetN2.starter = 0;
@@ -133,35 +134,22 @@ export const systems: System[] = feature({
           engine.N2 = interpolation.begin(
             engine.N2,
             engine.N2.value,
-            Math.min(engine.targetN2.total.value, C.engine.N2_MAX),
-            perSecond(engine.targetN2.throttle > 0 ? 10 : 1)
+            Math.min(engine.targetN2.total.value, C.engine.N2_MAX)
           );
 
-        engine.N2 = interpolation.update(engine.N2, lerp);
-
-        return { ...world, engine };
-      },
-      N1: (world) => {
-        const { engine } = world;
-
-        const curve = pointsToCurve([
-          [0, 0],
-          [0.25, 0.05],
-          [0.56, 0.15],
-          [0.6, 0.2],
-          [1, 1],
-        ]);
-
-        if (engine.N2.value) {
-          engine.N1 = interpolation.begin(
-            engine.N1,
-            engine.N1.value,
-            curve(engine.N2.value / C.engine.N2_MAX) * C.engine.N1_MAX,
-            perSecond(engine.targetN2.throttle > 0 ? 12 : 1.2)
+        if (engine.targetN2.total.value > 0) {
+          engine.N2 = interpolation.update(
+            engine.N2,
+            perSecond(engine.targetN2.throttle > 0 ? 10 : 1),
+            lerp
+          );
+        } else {
+          engine.N2 = interpolation.update(
+            engine.N2,
+            perSecond(engine.N2.value > C.engine.N2_START ? 5 : 3),
+            smooth
           );
         }
-
-        engine.N1 = interpolation.update(engine.N1, lerp);
 
         return { ...world, engine };
       },
