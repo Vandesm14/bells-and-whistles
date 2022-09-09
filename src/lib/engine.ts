@@ -1,8 +1,10 @@
 import { Comparator, compare } from './util';
 import { World } from './world';
 
-export type System<T = World> = (state: T) => T;
+export const FRAME_RATE = 30;
+export const perSecond = (constant: number) => constant / FRAME_RATE;
 
+export type System<T = World> = (state: T) => T;
 export const pipe =
   <T = World>(...fns: System<T>[]) =>
   (state: T) =>
@@ -32,4 +34,25 @@ export function collapse<T>(
     .filter(([key]) => compare(Number(key), comparator, val))
     .map(([, system]) => system);
   return (world: T) => pipe(...systems)(world);
+}
+
+export function stableInterval(fn: () => void, interval: number) {
+  let last = Date.now();
+  let timer = 0;
+
+  const loop = () => {
+    const now = Date.now();
+    const delta = now - last;
+
+    if (delta > interval) {
+      last = now;
+      fn();
+    }
+
+    timer = requestAnimationFrame(loop);
+  };
+
+  loop();
+
+  return () => cancelAnimationFrame(timer);
 }
