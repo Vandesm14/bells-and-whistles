@@ -1,5 +1,6 @@
 import React from 'react';
-import { init as world, normalize } from '../lib/world';
+import { normalize } from '../lib/util';
+import { constants as C } from '../lib/world';
 
 const degToRad = (deg: number) => (deg * Math.PI) / 180;
 
@@ -10,6 +11,55 @@ export interface EngineMfdProps {
 
 const WIDTH = 500;
 const HEIGHT = 515;
+
+interface Circle {
+  x: number;
+  y: number;
+  radius: number;
+  from: number;
+  to: number;
+  get length(): number;
+}
+
+function spoke(
+  ctx: CanvasRenderingContext2D,
+  circle: Circle,
+  angle: number,
+  length = 10
+) {
+  ctx.moveTo(
+    circle.x +
+      circle.radius * Math.cos(degToRad(circle.from + angle * circle.length)),
+    circle.y +
+      circle.radius * Math.sin(degToRad(circle.from + angle * circle.length))
+  );
+  ctx.lineTo(
+    circle.x +
+      (circle.radius - length) *
+        Math.cos(degToRad(circle.from + angle * circle.length)),
+    circle.y +
+      (circle.radius - length) *
+        Math.sin(degToRad(circle.from + angle * circle.length))
+  );
+}
+
+function label(
+  ctx: CanvasRenderingContext2D,
+  circle: Circle,
+  angle: number,
+  text: string,
+  length = 20
+) {
+  ctx.fillText(
+    text,
+    circle.x +
+      (circle.radius - length) *
+        Math.cos(degToRad(circle.from + angle * circle.length)),
+    circle.y +
+      (circle.radius - length) *
+        Math.sin(degToRad(circle.from + angle * circle.length))
+  );
+}
 
 export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -72,34 +122,11 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
       ctx.beginPath();
       ctx.lineWidth = 3;
 
-      function spoke(
-        ctx: CanvasRenderingContext2D,
-        angle: number,
-        length = 10
-      ) {
-        ctx.moveTo(
-          circle.x +
-            circle.radius *
-              Math.cos(degToRad(circle.from + angle * circle.length)),
-          circle.y +
-            circle.radius *
-              Math.sin(degToRad(circle.from + angle * circle.length))
-        );
-        ctx.lineTo(
-          circle.x +
-            (circle.radius - length) *
-              Math.cos(degToRad(circle.from + angle * circle.length)),
-          circle.y +
-            (circle.radius - length) *
-              Math.sin(degToRad(circle.from + angle * circle.length))
-        );
-      }
-
       // create a spoke for N2_START
-      spoke(ctx, normalize(0, 100, 0, 1, world.engine.N2_START));
+      spoke(ctx, circle, normalize(0, 100, 0, 1, C.engine.N2_START));
 
       for (let i = 0; i < 6; i++) {
-        spoke(ctx, 0.5 + i * 0.1);
+        spoke(ctx, circle, 0.5 + i * 0.1);
       }
 
       ctx.stroke();
@@ -113,26 +140,9 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
-      function label(
-        ctx: CanvasRenderingContext2D,
-        angle: number,
-        text: string,
-        length = 20
-      ) {
-        ctx.fillText(
-          text,
-          circle.x +
-            (circle.radius - length) *
-              Math.cos(degToRad(circle.from + angle * circle.length)),
-          circle.y +
-            (circle.radius - length) *
-              Math.sin(degToRad(circle.from + angle * circle.length))
-        );
-      }
-
       // create a "5" lable for 50% and "10" for 100%
-      label(ctx, 0.5, '5');
-      label(ctx, 1, '10');
+      label(ctx, circle, 0.5, '5');
+      label(ctx, circle, 1, '10');
     }
 
     {
@@ -172,7 +182,7 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
             Math.cos(
               degToRad(
                 circle.from +
-                  normalize(0, 1, world.engine.N2_IDLE / 100, 1, throttle) *
+                  normalize(0, 1, C.engine.N2_IDLE / 100, 1, throttle) *
                     circle.length
               )
             ),
@@ -181,7 +191,7 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
             Math.sin(
               degToRad(
                 circle.from +
-                  normalize(0, 1, world.engine.N2_IDLE / 100, 1, throttle) *
+                  normalize(0, 1, C.engine.N2_IDLE / 100, 1, throttle) *
                     circle.length
               )
             ),

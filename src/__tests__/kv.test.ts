@@ -1,4 +1,4 @@
-import { KV } from '../lib/state';
+import { KV } from '../lib/kv';
 
 describe('kv', () => {
   describe('create', () => {
@@ -30,7 +30,7 @@ describe('kv', () => {
     });
 
     it('should be immutable when setting values', () => {
-      let obj = { a: 1 };
+      const obj = { a: 1 };
       let kv = KV(obj);
 
       kv = kv.set('foo', 'bar');
@@ -124,7 +124,7 @@ describe('kv', () => {
     });
 
     it('should be immutable when deleting values', () => {
-      let obj = { a: 1 };
+      const obj = { a: 1 };
       let kv = KV(obj);
 
       kv = kv.delete('a');
@@ -138,26 +138,26 @@ describe('kv', () => {
 
 describe('kvmut', () => {
   it('should create a value', () => {
-    let kv = KV();
+    const kv = KV();
     kv.set('foo', 'bar');
     expect(kv.get('foo')).toBe('bar');
   });
 
   it('should get all values', () => {
-    let kv = KV();
+    const kv = KV();
     kv.set('foo', 'bar');
     expect(kv.get()).toEqual({ foo: 'bar' });
   });
 
   it('should update a value', () => {
-    let kv = KV();
+    const kv = KV();
     kv.set('foo', 'bar');
     kv.set('foo', 'baz');
     expect(kv.get('foo')).toBe('baz');
   });
 
   it('should delete a value', () => {
-    let kv = KV();
+    const kv = KV();
     kv.set('foo', 'bar');
     kv.delete('foo');
     expect(kv.get('foo')).toBe(undefined);

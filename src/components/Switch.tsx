@@ -1,4 +1,4 @@
-import { KV } from '../lib/state';
+import { KV } from '../lib/kv';
 import type React from 'react';
 import { World } from '../lib/world';
 

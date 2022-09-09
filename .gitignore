@@ -7,3 +7,6 @@ dist/
 
 # typescript
 *.tsbuildinfo
+
+# debugging
+*.out

@@ -1,4 +1,4 @@
-import { KV } from '../lib/state';
+import { KV } from '../lib/kv';
 import { World } from '../lib/world';
 
 export interface SliderProps {
@@ -20,7 +20,7 @@ export function Slider({ state, setState, path, text }: SliderProps) {
         max="1"
         step="0.01"
         onChange={change}
-        defaultValue={KV(state).get(path) ?? 0}
+        value={KV(state).get(path) ?? 0}
       />
     </label>
   );

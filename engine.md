@@ -18,7 +18,6 @@
 ### Easing
 
 - When the pressure changes, the RPM will gradually change accordingly.
-- This curve can be explained as `T: Time, R: RPM, R = -(T - 1)^2 + 1`.
 
 ## On Start
 
