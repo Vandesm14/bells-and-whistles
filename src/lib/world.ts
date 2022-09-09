@@ -1,3 +1,5 @@
+import { generateInterpolation } from './phys';
+
 export type System<T = World> = (state: T) => T;
 
 export const pipe =
@@ -28,26 +30,14 @@ export function lerp(a: number, b: number, t: number, min?: number) {
   return a + (b - a) * t;
 }
 
-export function easeOut(a: number, b: number, t: number, min?: number) {
+export function smooth(a: number, b: number, t: number, min?: number) {
   if (min && Math.abs(a - b) < min) return b;
-  return a + (b - a) * (1 - Math.pow(1 - t, 3));
-}
-
-export function easeInOut(a: number, b: number, t: number, min?: number) {
-  if (min && Math.abs(a - b) < min) return b;
-  return a + (b - a) * (1 - Math.pow(1 - t, 2));
+  // return -(Math.pow(t - 1, 2) - 1) * (b - a) + a;
+  return Math.sin((t / 2) * Math.PI) * (b - a) + a;
 }
 
 export function clamp(a: number, min: number, max: number) {
   return Math.min(Math.max(a, min), max);
-}
-
-export function travel(from: number, to: number, rate: number, min = rate) {
-  const diff = Math.abs(from - to);
-  const delta = from < to ? rate : -rate;
-  if (diff < min) return to;
-  return from + delta;
-  // return easeInOut(from, to, rate, min);
 }
 
 export function normalize(
@@ -86,6 +76,27 @@ export function collapse<T>(
   return (world: T) => pipe(...systems)(world);
 }
 
+export interface Detector<T> {
+  value: T;
+  last: T;
+  didChange: boolean;
+}
+
+export function generateDetector<T>(initial: T): Detector<T> {
+  return {
+    value: initial,
+    last: initial,
+    didChange: false,
+  };
+}
+
+export function detectChange<T>(detector: Detector<T>, newValue: T) {
+  detector.didChange = detector.value !== newValue;
+  detector.last = detector.value;
+  detector.value = newValue;
+  return detector;
+}
+
 export const init = {
   framecount: 0,
   lastTS: 0,
@@ -98,14 +109,16 @@ export const init = {
   fuel: {
     tank: 1_000_000,
     pump: false,
-    pressure: 0,
+    avail: false,
   },
   engine: {
     // Constants
-    N1_IDLE: 15,
-    N2_IDLE: 56,
-    N2_START: 25,
     N1_START: 5,
+    N1_IDLE: 15,
+
+    N2_START: 25,
+    N2_IDLE: 56,
+    N2_MAX: 100,
 
     // State
     extBleed: false,
@@ -113,13 +126,13 @@ export const init = {
     fuelValve: false,
     igniter: false,
     N1: 0,
-    N2: 0,
+    N2: generateInterpolation(),
     EGT: 0,
 
-    rpmAccel: {
-      fuel: 0,
-      starter: 0,
-      total: 0,
+    targetN2: {
+      starter: 22,
+      throttle: 0,
+      total: generateDetector(0),
     },
 
     // Controls

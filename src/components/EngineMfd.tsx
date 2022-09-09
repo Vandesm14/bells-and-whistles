@@ -54,62 +54,16 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
     }
 
     {
-      // Current
-      ctx.strokeStyle = '#82FF80';
-      ctx.beginPath();
-      ctx.lineWidth = 4;
-      ctx.moveTo(circle.x, circle.y);
-      ctx.lineTo(
-        circle.x +
-          circle.radius *
-            Math.cos(
-              degToRad(
-                circle.from + normalize(0, 100, 0, 1, N2) * circle.length
-              )
-            ),
-        circle.y +
-          circle.radius *
-            Math.sin(
-              degToRad(
-                circle.from + normalize(0, 100, 0, 1, N2) * circle.length
-              )
-            )
+      // Digital
+      ctx.fillStyle = '#82FF80';
+      ctx.font = 'bold 20px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(
+        `${N2.toFixed(1)}%`,
+        circle.x + circle.radius / 2,
+        circle.y + circle.radius / 2
       );
-      ctx.stroke();
-      ctx.closePath();
-    }
-
-    {
-      // Target
-      ctx.strokeStyle = '#F19036';
-      ctx.beginPath();
-      ctx.lineWidth = 2;
-      ctx.arc(
-        circle.x +
-          (circle.radius + 10) *
-            Math.cos(
-              degToRad(
-                circle.from +
-                  normalize(0, 1, world.engine.N2_IDLE / 100, 1, throttle) *
-                    circle.length
-              )
-            ),
-        circle.y +
-          (circle.radius + 10) *
-            Math.sin(
-              degToRad(
-                circle.from +
-                  normalize(0, 1, world.engine.N2_IDLE / 100, 1, throttle) *
-                    circle.length
-              )
-            ),
-        5,
-        0,
-        2 * Math.PI
-      );
-
-      ctx.stroke();
-      ctx.closePath();
     }
 
     {
@@ -179,6 +133,65 @@ export default function EngineMfd({ N2, throttle }: EngineMfdProps) {
       // create a "5" lable for 50% and "10" for 100%
       label(ctx, 0.5, '5');
       label(ctx, 1, '10');
+    }
+
+    {
+      // Needle
+      ctx.strokeStyle = '#82FF80';
+      ctx.beginPath();
+      ctx.lineWidth = 4;
+      ctx.moveTo(circle.x, circle.y);
+      ctx.lineTo(
+        circle.x +
+          circle.radius *
+            Math.cos(
+              degToRad(
+                circle.from + normalize(0, 100, 0, 1, N2) * circle.length
+              )
+            ),
+        circle.y +
+          circle.radius *
+            Math.sin(
+              degToRad(
+                circle.from + normalize(0, 100, 0, 1, N2) * circle.length
+              )
+            )
+      );
+      ctx.stroke();
+      ctx.closePath();
+    }
+
+    {
+      // Throttle
+      ctx.strokeStyle = '#F19036';
+      ctx.beginPath();
+      ctx.lineWidth = 2;
+      ctx.arc(
+        circle.x +
+          (circle.radius + 10) *
+            Math.cos(
+              degToRad(
+                circle.from +
+                  normalize(0, 1, world.engine.N2_IDLE / 100, 1, throttle) *
+                    circle.length
+              )
+            ),
+        circle.y +
+          (circle.radius + 10) *
+            Math.sin(
+              degToRad(
+                circle.from +
+                  normalize(0, 1, world.engine.N2_IDLE / 100, 1, throttle) *
+                    circle.length
+              )
+            ),
+        5,
+        0,
+        2 * Math.PI
+      );
+
+      ctx.stroke();
+      ctx.closePath();
     }
   }
 

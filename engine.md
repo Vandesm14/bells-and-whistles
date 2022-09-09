@@ -1,5 +1,25 @@
 # Engine
 
+## Physics Fundamentals
+
+### RPM and Power
+
+- The starter only has enough power to get the RPM to 25% of the max RPM.
+- The fuel can combust at 25% and above, so it can start to contribute to the power.
+- With the thrust levers at idle, the engine will idle at 56% of the max RPM.
+- With the thrust levers at full, the engine will reach 100% of the max RPM.
+
+### Relationships
+
+- The higher the thrust levers, the more fuel will be used (injected into the engine).
+- The more fuel in the engine, the higher the pressure and temperature.
+- The higher the pressure, the higher the RPM of the engine.
+
+### Easing
+
+- When the pressure changes, the RPM will gradually change accordingly.
+- This curve can be explained as `T: Time, R: RPM, R = -(T - 1)^2 + 1`.
+
 ## On Start
 
 - [switch] external power `ON`

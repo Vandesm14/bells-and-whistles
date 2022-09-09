@@ -3,16 +3,18 @@ import { createRoot } from 'react-dom/client';
 import { Slider } from './components/Slider';
 import { Switch } from './components/Switch';
 import {
-  collapse,
+  detectChange,
   feature,
   init,
   normalize,
+  smooth,
   pipe,
   System,
-  travel,
   World,
+  lerp,
 } from './lib/world';
 import EngineMfd from './components/EngineMfd';
+import { beginInterpolation, updateInterpolation } from './lib/phys';
 
 const FRAME_RATE = 30;
 const perSecond = (constant: number) => constant / FRAME_RATE;
@@ -48,16 +50,9 @@ const systems: System[] = feature({
   }),
   fuel: pipe(
     ...feature({
-      pump: (world) => {
+      avail: (world) => {
         const { fuel } = world;
-        const { throttle } = world.input;
-
-        if (fuel.pump) {
-          if (fuel.tank > 0) fuel.pressure = 1 + throttle;
-          return { ...world, fuel };
-        }
-
-        fuel.pressure = 0;
+        fuel.avail = fuel.pump && fuel.tank > 0;
         return { ...world, fuel };
       },
       // tank: (world) => {
@@ -74,42 +69,46 @@ const systems: System[] = feature({
 
         if (engine.input.starter) {
           engine.startValve = true;
-          engine.rpmAccel.starter = travel(
-            engine.rpmAccel.starter,
-            25,
-            perSecond(2)
-          );
+          engine.targetN2.starter = engine.N2_START;
         } else {
           engine.startValve = false;
-          engine.rpmAccel.starter = 0;
+          engine.targetN2.starter = 0;
         }
 
         return { ...world, engine };
       },
-      fuel: (world) => {
+      throttle: (world) => {
         const { engine } = world;
-        const { pressure } = world.fuel;
 
-        // the fuel can only combust if the engine reaches N2_START and beyond
-        // if the fuel pressure is at 1 (throttle idle), then N2 will rise to 56
+        const canUse =
+          world.fuel.avail &&
+          engine.fuelValve &&
+          engine.N2.value >= engine.N2_START;
 
-        if (engine.fuelValve && engine.N2 >= engine.N2_START) {
-          engine.rpmAccel.fuel = travel(
-            engine.rpmAccel.fuel,
-            normalize(1, 2, engine.N2_IDLE, 100, pressure),
-            perSecond(5)
+        engine.targetN2.throttle =
+          normalize(0, 1, engine.N2_IDLE, engine.N2_MAX, world.input.throttle) *
+          Number(canUse);
+
+        return { ...world, engine };
+      },
+      N2: (world) => {
+        const { engine } = world;
+
+        const total = Math.max(
+          engine.targetN2.starter,
+          engine.targetN2.throttle
+        );
+        engine.targetN2.total = detectChange(engine.targetN2.total, total);
+
+        if (engine.targetN2.total.didChange)
+          engine.N2 = beginInterpolation(
+            engine.N2,
+            engine.N2.value,
+            Math.min(total, engine.N2_MAX),
+            perSecond(engine.targetN2.throttle > 0 ? 10 : 1)
           );
-        } else {
-          engine.rpmAccel.fuel = 0;
-        }
 
-        return { ...world, engine };
-      },
-      rpmAccel: (world) => {
-        const { engine } = world;
-
-        engine.rpmAccel.total = engine.rpmAccel.starter + engine.rpmAccel.fuel;
-        engine.N2 = travel(engine.N2, engine.rpmAccel.total, perSecond(1));
+        engine.N2 = updateInterpolation(engine.N2, lerp);
 
         return { ...world, engine };
       },
@@ -152,7 +151,9 @@ function useLocalStorage<T>(key: string, initialValue: T) {
 }
 
 const App = () => {
-  const [state, setState, reset] = useLocalStorage<World>('world', init);
+  // const [state, setState, reset] = useLocalStorage<World>('world', init);
+  const [state, setState] = useState<World>(init);
+  const reset = () => void 0;
   useEffect(() => {
     stableInterval(() => {
       setState((world) => tick(world));
@@ -193,7 +194,7 @@ const App = () => {
           setState={setState}
           text="throttle"
         />
-        <EngineMfd N2={state.engine.N2} throttle={state.input.throttle} />
+        <EngineMfd N2={state.engine.N2.value} throttle={state.input.throttle} />
         <button onClick={reset}>reset</button>
       </div>
     </>
