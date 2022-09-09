@@ -47,6 +47,7 @@ describe('structureIsEqual', () => {
       different: 3,
     };
 
+    // @ts-expect-error: we know these are not equal
     expect(structureIsEqual(a, b)).toBe(false);
   });
 
@@ -66,6 +67,7 @@ describe('structureIsEqual', () => {
       },
     };
 
+    // @ts-expect-error: we know these are not equal
     expect(structureIsEqual(a, b)).toBe(false);
   });
 

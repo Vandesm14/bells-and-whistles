@@ -48,15 +48,18 @@ export function logBase(base: number, value: number) {
 /**
  * Returns a boolean if the structure of the two objects (nested keys) are the same.
  */
-export function structureIsEqual(
-  a: any,
-  b: any,
+export function structureIsEqual<T extends Record<string, any>>(
+  a: T,
+  b: T,
   returnError: true
 ): { isEqual: boolean; error: string; keys: string[] };
-export function structureIsEqual(a: any, b: any): boolean;
-export function structureIsEqual(
-  a: any,
-  b: any,
+export function structureIsEqual<T extends Record<string, any>>(
+  a: T,
+  b: T
+): boolean;
+export function structureIsEqual<T extends Record<string, any>>(
+  a: T,
+  b: T,
   returnKeys?: boolean
 ): boolean | { isEqual: boolean; error: string; keys: string[] } {
   const errOrBool = (
