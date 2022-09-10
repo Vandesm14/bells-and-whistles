@@ -31,3 +31,14 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   return [storedValue, setStoredValue, reset] as const;
 }
+
+export async function getState<T>(
+  setState: React.Dispatch<React.SetStateAction<T>>
+): Promise<T> {
+  return new Promise((resolve) => {
+    setState((state) => {
+      resolve(state);
+      return state;
+    });
+  });
+}

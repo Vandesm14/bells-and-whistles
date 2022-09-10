@@ -6,7 +6,7 @@ import EngineMfd from './components/EngineMfd';
 import { stableInterval, FRAME_RATE, tick, DebugState } from './lib/engine';
 import { init, World, systems } from './lib/world';
 import { structureIsEqual } from './lib/util';
-import { useLocalStorage } from './lib/hooks';
+import { getState, useLocalStorage } from './lib/hooks';
 
 const App = () => {
   const [debugMode, setDebugMode] = useState(false);
@@ -20,26 +20,24 @@ const App = () => {
         reset();
     }
 
-    stableInterval(() => {
-      setDebugMode((debugMode) => {
-        setState((world) => {
-          const then = Date.now();
-          const newWorld = tick(world, systems, debugMode);
-          const diff = Date.now() - then;
+    stableInterval(async () => {
+      const debugMode = await getState(setDebugMode);
+      let world = await getState(setState);
 
-          const { health } = newWorld;
+      const then = Date.now();
+      world = tick(world, systems, debugMode);
+      const diff = Date.now() - then;
 
-          setDebug(newWorld.debug);
-          newWorld.debug = { systems: {} };
+      const { health } = world;
 
-          const ms = health.ms;
-          const percentOfMs = (diff / ms) * 100;
-          health.ticks = `${diff}ms (${percentOfMs.toFixed(2)}%)`;
-          return { ...newWorld, health };
-        });
+      setDebug(world.debug);
+      world.debug = { systems: {} };
 
-        return debugMode;
-      });
+      const ms = health.ms;
+      const percentOfMs = (diff / ms) * 100;
+      health.ticks = `${diff}ms (${percentOfMs.toFixed(2)}%)`;
+
+      setState({ ...world, health });
     }, 1000 / FRAME_RATE);
   }, []);
 
