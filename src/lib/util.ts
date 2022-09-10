@@ -76,7 +76,7 @@ export function structureIsEqual<T extends Record<string, any>>(
   const aKeys = Object.keys(a);
   const bKeys = Object.keys(b);
   if (aKeys.length !== bKeys.length)
-    return errOrBool(returnKeys, false, 'length');
+    return errOrBool(returnKeys, false, `length mismatch`);
   if (Array.isArray(a) || Array.isArray(b))
     return errOrBool(returnKeys, false, 'array');
   for (const key of aKeys) {
@@ -93,4 +93,23 @@ export function structureIsEqual<T extends Record<string, any>>(
     }
   }
   return errOrBool(returnKeys, true);
+}
+
+export function getPartialDiff<T extends Record<string, any>>(
+  a: T,
+  b: T
+): Partial<T> {
+  const keys = Object.keys(a);
+  const diff: Partial<T> = {};
+  for (const key of keys) {
+    if (typeof a[key] === 'object' && typeof b[key] === 'object') {
+      const result = getPartialDiff(a[key], b[key]);
+      // @ts-expect-error: yes, string can be used as a key
+      if (Object.keys(result).length > 0) diff[key] = result;
+    } else if (a[key] !== b[key]) {
+      // @ts-expect-error: yes, string can be used as a key
+      diff[key] = b[key];
+    }
+  }
+  return diff;
 }

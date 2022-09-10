@@ -1,37 +1,44 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Slider } from './components/Slider';
 import { Switch } from './components/Switch';
 import EngineMfd from './components/EngineMfd';
-import { SystemFn, pipe, stableInterval, FRAME_RATE } from './lib/engine';
+import { stableInterval, FRAME_RATE, tick, DebugState } from './lib/engine';
 import { init, World, systems } from './lib/world';
 import { structureIsEqual } from './lib/util';
 import { useLocalStorage } from './lib/hooks';
 
-const tick: SystemFn = (state: World) =>
-  pipe(...systems.map((sys) => sys.fn))(structuredClone(state));
-
 const App = () => {
+  const [debugMode, setDebugMode] = useState(false);
+  const [debug, setDebug] = useState<DebugState>({ systems: {} });
   const [state, setState, reset] = useLocalStorage<World>('world', init);
   useEffect(() => {
     const result = structureIsEqual(state, init, true);
     if (!result.isEqual) {
+      console.error(result.error, { state, init });
       if (confirm(`Save is out of date, reset?\n\nReason: ${result.error}`))
         reset();
     }
 
     stableInterval(() => {
-      setState((world) => {
-        const then = Date.now();
-        world = tick(world);
-        const diff = Date.now() - then;
+      setDebugMode((debugMode) => {
+        setState((world) => {
+          const then = Date.now();
+          const newWorld = tick(world, systems, debugMode);
+          const diff = Date.now() - then;
 
-        const { health } = world;
+          const { health } = newWorld;
 
-        const ms = health.ms;
-        const percentOfMs = (diff / ms) * 100;
-        health.ticks = `${diff}ms (${percentOfMs.toFixed(2)}%)`;
-        return { ...world, health };
+          setDebug(newWorld.debug);
+          newWorld.debug = { systems: {} };
+
+          const ms = health.ms;
+          const percentOfMs = (diff / ms) * 100;
+          health.ticks = `${diff}ms (${percentOfMs.toFixed(2)}%)`;
+          return { ...newWorld, health };
+        });
+
+        return debugMode;
       });
     }, 1000 / FRAME_RATE);
   }, []);
@@ -40,12 +47,28 @@ const App = () => {
     <>
       <div
         style={{
-          display: 'flex',
-          width: '100%',
-          justifyContent: 'space-evenly',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
         }}
       >
-        <pre>{JSON.stringify(state, null, 2)}</pre>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            width: 'max-content',
+          }}
+        >
+          <label>
+            Debug
+            <input
+              type="checkbox"
+              checked={debugMode}
+              onChange={() => setDebugMode(!debugMode)}
+            />
+          </label>
+          {debugMode ? <pre>{JSON.stringify(debug, null, 2)}</pre> : null}
+          <pre>{JSON.stringify(state, null, 2)}</pre>
+        </div>
         <div
           style={{
             display: 'flex',

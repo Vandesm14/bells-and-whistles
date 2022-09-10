@@ -1,4 +1,4 @@
-import { structureIsEqual } from '../lib/util';
+import { getPartialDiff, structureIsEqual } from '../lib/util';
 
 describe('structureIsEqual', () => {
   it('should return true for equal objects', () => {
@@ -100,5 +100,81 @@ describe('structureIsEqual', () => {
     };
 
     expect(structureIsEqual(a, b)).toBe(true);
+  });
+});
+
+describe('getPartialDiff', () => {
+  it('should return an empty object for equal objects', () => {
+    const a = {
+      a: 1,
+      b: 2,
+      c: 3,
+    };
+    const b = {
+      a: 1,
+      b: 2,
+      c: 3,
+    };
+
+    expect(getPartialDiff(a, b)).toEqual({});
+  });
+
+  it('should return an empty object for deep equal objects', () => {
+    const a = {
+      a: 1,
+      b: 2,
+      c: {
+        d: 4,
+      },
+    };
+    const b = {
+      a: 1,
+      b: 2,
+      c: {
+        d: 4,
+      },
+    };
+
+    expect(getPartialDiff(a, b)).toEqual({});
+  });
+
+  it('should return the diff for unequal objects', () => {
+    const a = {
+      a: 1,
+      b: 2,
+      c: 3,
+    };
+    const b = {
+      a: 1,
+      b: 2,
+      c: 4,
+    };
+
+    expect(getPartialDiff(a, b)).toEqual({
+      c: 4,
+    });
+  });
+
+  it('should return the diff for deep unequal objects', () => {
+    const a = {
+      a: 1,
+      b: 2,
+      c: {
+        d: 4,
+      },
+    };
+    const b = {
+      a: 1,
+      b: 2,
+      c: {
+        d: 5,
+      },
+    };
+
+    expect(getPartialDiff(a, b)).toEqual({
+      c: {
+        d: 5,
+      },
+    });
   });
 });

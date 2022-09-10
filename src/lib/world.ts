@@ -1,5 +1,5 @@
 import { changeDetector, interpolation } from './blocks';
-import { feature, perSecond, System } from './engine';
+import { DebugState, feature, perSecond, System } from './engine';
 import { lerp, normalize, smooth } from './util';
 
 export const constants = {
@@ -23,6 +23,7 @@ export const init = {
     fps: 0,
     ticks: '',
   },
+  debug: { systems: {} } as DebugState,
   power: {
     externalAvail: 0,
     external: false,
