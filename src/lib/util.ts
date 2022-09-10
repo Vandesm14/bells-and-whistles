@@ -114,6 +114,24 @@ export function getPartialDiff<T extends Record<string, any>>(
   return diff;
 }
 
+export function applyPartialDiff<T extends Record<string, any>>(
+  a: T,
+  diff: Partial<T>
+): T {
+  const keys = Object.keys(diff);
+  const result: T = { ...a };
+  for (const key of keys) {
+    if (typeof a[key] === 'object' && typeof diff[key] === 'object') {
+      // @ts-expect-error: yes, string can be used as a key
+      result[key] = applyPartialDiff(a[key], diff[key]);
+    } else {
+      // @ts-expect-error: yes, string can be used as a key
+      result[key] = diff[key];
+    }
+  }
+  return result;
+}
+
 export function omit<T extends Record<string, any>>(
   obj: T,
   keys: string[]
