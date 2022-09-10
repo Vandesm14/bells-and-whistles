@@ -16,12 +16,12 @@ export const constants = {
 
 export type World = typeof init;
 export const init = {
-  health: {
+  performance: {
     framecount: 0,
     lastTS: 0,
     ms: 0,
     fps: 0,
-    ticks: '',
+    tick: '',
   },
   power: {
     externalAvail: 0,
@@ -58,15 +58,6 @@ export const init = {
 
 const C = constants;
 export const systems: System[] = feature({
-  fps: (world) => {
-    const { health } = world;
-
-    health.ms = Date.now() - world.health.lastTS;
-    health.fps = Math.round(1000 / (Date.now() - world.health.lastTS));
-    health.lastTS = Date.now();
-
-    return { ...world, health };
-  },
   fuel: feature({
     avail: (world) => {
       const { fuel } = world;

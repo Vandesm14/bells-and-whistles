@@ -113,3 +113,14 @@ export function getPartialDiff<T extends Record<string, any>>(
   }
   return diff;
 }
+
+export function omit<T extends Record<string, any>>(
+  obj: T,
+  keys: string[]
+): Omit<T, typeof keys[number]> {
+  const result = { ...obj };
+  for (const key of keys) {
+    delete result[key];
+  }
+  return result;
+}

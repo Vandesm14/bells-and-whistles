@@ -3,7 +3,13 @@ import { createRoot } from 'react-dom/client';
 import { Slider } from './components/Slider';
 import { Switch } from './components/Switch';
 import EngineMfd from './components/EngineMfd';
-import { stableInterval, FRAME_RATE, tick, DebugState } from './lib/engine';
+import {
+  stableInterval,
+  FRAME_RATE,
+  tick,
+  DebugState,
+  calcPerformance,
+} from './lib/engine';
 import { init, World, systems } from './lib/world';
 import { structureIsEqual } from './lib/util';
 import { getState, useLocalStorage } from './lib/hooks';
@@ -13,31 +19,22 @@ const App = () => {
   const [debug, setDebug] = useState<DebugState>({ systems: {} });
   const [state, setState] = useLocalStorage<World>('world', init);
   useEffect(() => {
-    const result = structureIsEqual(state, init, true);
-    if (!result.isEqual) {
-      console.error(result.error, { state, init });
-      if (confirm(`Save is out of date, reset?\n\nReason: ${result.error}`))
-        setState(init);
+    const isEqual = structureIsEqual(state, init, true);
+    if (!isEqual.isEqual) {
+      console.error(isEqual.error, { state, init });
+      setState(init);
     }
 
     stableInterval(async () => {
       const debugMode = await getState(setDebugMode);
-      let world = await getState(setState);
+      const world = await getState(setState);
 
-      const then = Date.now();
-      world = tick(world, systems, debugMode);
-      const diff = Date.now() - then;
+      const start = performance.now();
+      const result = tick(world, systems, debugMode, debug);
 
-      const { health } = world;
+      if (debugMode) setDebug(result.debug);
 
-      setDebug(world.debug);
-      world.debug = { systems: {} };
-
-      const ms = health.ms;
-      const percentOfMs = (diff / ms) * 100;
-      health.ticks = `${diff}ms (${percentOfMs.toFixed(2)}%)`;
-
-      setState({ ...world, health });
+      setState(calcPerformance(result.world, performance.now() - start));
     }, 1000 / FRAME_RATE);
   }, []);
 

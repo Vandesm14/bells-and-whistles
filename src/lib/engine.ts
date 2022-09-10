@@ -19,30 +19,60 @@ export type DebugState = {
   >;
 };
 
-export function run(world: World, system: System, debug = false): World {
-  const start = performance.now();
-  let result = system.fn(structuredClone(world));
-  const end = performance.now();
-
-  if (debug && system.name) {
-    result.debug.systems[system.name] = {
-      ms: end - start,
-      diff: getPartialDiff(world, result),
-    };
-  }
-
-  return result;
-}
-
 /**
  * Runs a list of systems in order, and returns the new world state and the list of systems (if debug, they'll have debug info).
  */
-export function tick(world: World, systems: System[], debug = false) {
-  let result = world;
+export function tick(
+  world: World,
+  systems: System[],
+  isDebugging: boolean,
+  debugState: DebugState
+): { world: World; debug: DebugState };
+export function tick(world: World, systems: System[]): { world: World };
+export function tick(
+  world: World,
+  systems: System[],
+  isDebugging?: boolean,
+  debugState?: DebugState
+) {
+  let state = world;
+
+  if (isDebugging && debugState) debugState.systems = {};
+
   for (const system of systems) {
-    result = run(result, system, debug);
+    const start = performance.now();
+    const result = system.fn(structuredClone(state));
+    const end = performance.now();
+
+    if (isDebugging && debugState && system.name) {
+      debugState.systems[system.name] = {
+        ms: end - start,
+        diff: getPartialDiff(state, result),
+      };
+    }
+
+    state = result;
   }
-  return result;
+
+  if (isDebugging) {
+    return { world: state, debug: debugState };
+  }
+
+  return { world: state };
+}
+
+export function calcPerformance(world: World, diff: number) {
+  const { performance } = world;
+
+  performance.ms = Date.now() - performance.lastTS;
+  performance.fps = Math.round(1000 / (Date.now() - performance.lastTS));
+  performance.lastTS = Date.now();
+
+  const ms = performance.ms;
+  const percentOfMs = (diff / ms) * 100;
+  performance.tick = `${diff}ms (${percentOfMs.toFixed(2)}% of frame)`;
+
+  return { ...world, performance };
 }
 
 /**
