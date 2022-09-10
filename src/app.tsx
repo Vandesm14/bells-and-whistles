@@ -11,13 +11,13 @@ import { getState, useLocalStorage } from './lib/hooks';
 const App = () => {
   const [debugMode, setDebugMode] = useState(false);
   const [debug, setDebug] = useState<DebugState>({ systems: {} });
-  const [state, setState, reset] = useLocalStorage<World>('world', init);
+  const [state, setState] = useLocalStorage<World>('world', init);
   useEffect(() => {
     const result = structureIsEqual(state, init, true);
     if (!result.isEqual) {
       console.error(result.error, { state, init });
       if (confirm(`Save is out of date, reset?\n\nReason: ${result.error}`))
-        reset();
+        setState(init);
     }
 
     stableInterval(async () => {
@@ -102,7 +102,7 @@ const App = () => {
             N2={state.engine.N2.value}
             throttle={state.input.throttle}
           />
-          <button onClick={reset}>reset</button>
+          <button onClick={() => setState(init)}>reset</button>
         </div>
       </div>
     </>
