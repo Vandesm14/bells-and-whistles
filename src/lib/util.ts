@@ -134,7 +134,7 @@ export function applyPartialDiff<T extends Record<string, any>>(
 
 export function omit<T extends Record<string, any>>(
   obj: T,
-  keys: string[]
+  keys: Array<keyof T>
 ): Omit<T, typeof keys[number]> {
   const result = { ...obj };
   for (const key of keys) {
