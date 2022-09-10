@@ -1,5 +1,5 @@
 import { changeDetector, interpolation } from './blocks';
-import { System, feature, perSecond, pipe } from './engine';
+import { feature, perSecond, System } from './engine';
 import { lerp, normalize, smooth } from './util';
 
 export const constants = {
@@ -67,95 +67,94 @@ export const systems: System[] = feature({
 
     return { ...world, health };
   },
-  fuel: pipe(
-    ...feature({
-      avail: (world) => {
-        const { fuel } = world;
-        fuel.avail = fuel.pump && fuel.tank > 0;
-        return { ...world, fuel };
-      },
-      // tank: (world) => {
-      //   const { fuel } = world;
-      //   fuel.tank -= perSecond(fuel.pressure);
-      //   return { ...world, fuel };
-      // },
-    })
-  ),
-  engine: pipe(
-    ...feature({
-      starter: (world) => {
-        const { engine } = world;
+  fuel: feature({
+    avail: (world) => {
+      const { fuel } = world;
+      fuel.avail = fuel.pump && fuel.tank > 0;
+      return { ...world, fuel };
+    },
+    // tank: (world) => {
+    //   const { fuel } = world;
+    //   fuel.tank -= perSecond(fuel.pressure);
+    //   return { ...world, fuel };
+    // },
+  }),
+  engine: feature({
+    starter: (world) => {
+      const { engine } = world;
 
-        if (engine.input.starter) {
-          engine.startValve = true;
-          engine.targetN2.starter =
-            engine.N2.value <= C.engine.N2_START ? C.engine.N2_START : 0;
-        } else {
-          engine.startValve = false;
-          engine.targetN2.starter = 0;
-        }
+      if (engine.input.starter) {
+        engine.startValve = true;
+        engine.targetN2.starter =
+          engine.N2.value <= C.engine.N2_START ? C.engine.N2_START : 0;
+      } else {
+        engine.startValve = false;
+        engine.targetN2.starter = 0;
+      }
 
-        return { ...world, engine };
-      },
-      throttle: (world) => {
-        const { engine } = world;
+      return { ...world, engine };
+    },
+    throttle: (world) => {
+      const { engine } = world;
 
-        const canUse =
-          world.fuel.avail &&
-          engine.fuelValve &&
-          engine.N2.value >= C.engine.N2_START;
+      const canUse =
+        world.fuel.avail &&
+        engine.fuelValve &&
+        engine.N2.value >= C.engine.N2_START;
 
-        engine.targetN2.throttle =
-          normalize(
-            0,
-            1,
-            C.engine.N2_IDLE,
-            C.engine.N2_MAX,
-            world.input.throttle
-          ) * Number(canUse);
+      engine.targetN2.throttle =
+        normalize(
+          0,
+          1,
+          C.engine.N2_IDLE,
+          C.engine.N2_MAX,
+          world.input.throttle
+        ) * Number(canUse);
 
-        return { ...world, engine };
-      },
-      N2Total: (world) => {
-        const { engine } = world;
+      return { ...world, engine };
+    },
+    N2Total: (world) => {
+      const { engine } = world;
 
-        const total = Math.max(
-          engine.targetN2.starter,
-          engine.targetN2.throttle
+      const total = Math.max(engine.targetN2.starter, engine.targetN2.throttle);
+      engine.targetN2.total = changeDetector.detect(
+        engine.targetN2.total,
+        total
+      );
+
+      return { ...world, engine };
+    },
+    N2RetrigInterp: (world) => {
+      const { engine } = world;
+
+      if (engine.targetN2.total.didChange)
+        engine.N2 = interpolation.begin(
+          engine.N2,
+          engine.N2.value,
+          Math.min(engine.targetN2.total.value, C.engine.N2_MAX)
         );
-        engine.targetN2.total = changeDetector.detect(
-          engine.targetN2.total,
-          total
+
+      return { ...world, engine };
+    },
+    N2UpdateInterp: (world) => {
+      const { engine } = world;
+
+      if (engine.targetN2.total.value > 0) {
+        engine.N2 = interpolation.update(
+          engine.N2,
+          perSecond(engine.targetN2.throttle > 0 ? 10 : 1),
+          lerp
         );
+      } else {
+        engine.N2 = interpolation.update(
+          engine.N2,
+          // TODO: find a better curve to start at N2 speed, then slowly ramp down to 0 (as it gets closer, it decreases slower)
+          perSecond(engine.N2.value > C.engine.N2_START ? 5 : 3),
+          smooth
+        );
+      }
 
-        return { ...world, engine };
-      },
-      N2: (world) => {
-        const { engine } = world;
-
-        if (engine.targetN2.total.didChange)
-          engine.N2 = interpolation.begin(
-            engine.N2,
-            engine.N2.value,
-            Math.min(engine.targetN2.total.value, C.engine.N2_MAX)
-          );
-
-        if (engine.targetN2.total.value > 0) {
-          engine.N2 = interpolation.update(
-            engine.N2,
-            perSecond(engine.targetN2.throttle > 0 ? 10 : 1),
-            lerp
-          );
-        } else {
-          engine.N2 = interpolation.update(
-            engine.N2,
-            perSecond(engine.N2.value > C.engine.N2_START ? 5 : 3),
-            smooth
-          );
-        }
-
-        return { ...world, engine };
-      },
-    })
-  ),
+      return { ...world, engine };
+    },
+  }),
 });

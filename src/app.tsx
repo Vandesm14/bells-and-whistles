@@ -3,12 +3,13 @@ import { createRoot } from 'react-dom/client';
 import { Slider } from './components/Slider';
 import { Switch } from './components/Switch';
 import EngineMfd from './components/EngineMfd';
-import { System, pipe, stableInterval, FRAME_RATE } from './lib/engine';
+import { SystemFn, pipe, stableInterval, FRAME_RATE } from './lib/engine';
 import { init, World, systems } from './lib/world';
 import { structureIsEqual } from './lib/util';
 import { useLocalStorage } from './lib/hooks';
 
-const tick: System = (state: World) => pipe(...systems)(structuredClone(state));
+const tick: SystemFn = (state: World) =>
+  pipe(...systems.map((sys) => sys.fn))(structuredClone(state));
 
 const App = () => {
   const [state, setState, reset] = useLocalStorage<World>('world', init);
@@ -37,40 +38,51 @@ const App = () => {
 
   return (
     <>
-      <pre>{JSON.stringify(state, null, 2)}</pre>
       <div
         style={{
           display: 'flex',
-          flexDirection: 'column',
-          width: 'max-content',
+          width: '100%',
+          justifyContent: 'space-evenly',
         }}
       >
-        <Switch
-          path="fuel.pump"
-          state={state}
-          setState={setState}
-          text="fuel pump"
-        />
-        <Switch
-          path="engine.input.starter"
-          state={state}
-          setState={setState}
-          text="starter"
-        />
-        <Switch
-          path="engine.fuelValve"
-          state={state}
-          setState={setState}
-          text="fuel valve"
-        />
-        <Slider
-          path="input.throttle"
-          state={state}
-          setState={setState}
-          text="throttle"
-        />
-        <EngineMfd N2={state.engine.N2.value} throttle={state.input.throttle} />
-        <button onClick={reset}>reset</button>
+        <pre>{JSON.stringify(state, null, 2)}</pre>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            width: 'max-content',
+          }}
+        >
+          <Switch
+            path="fuel.pump"
+            state={state}
+            setState={setState}
+            text="fuel pump"
+          />
+          <Switch
+            path="engine.input.starter"
+            state={state}
+            setState={setState}
+            text="starter"
+          />
+          <Switch
+            path="engine.fuelValve"
+            state={state}
+            setState={setState}
+            text="fuel valve"
+          />
+          <Slider
+            path="input.throttle"
+            state={state}
+            setState={setState}
+            text="throttle"
+          />
+          <EngineMfd
+            N2={state.engine.N2.value}
+            throttle={state.input.throttle}
+          />
+          <button onClick={reset}>reset</button>
+        </div>
       </div>
     </>
   );
