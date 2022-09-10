@@ -1,5 +1,6 @@
 import { getPartialDiff } from './util';
 import { World } from './world';
+import { History } from './history';
 
 export const FRAME_RATE = 30;
 export const perSecond = (constant: number) => constant / FRAME_RATE;
@@ -13,11 +14,28 @@ export interface System {
 }
 
 export type DebugState = {
+  debugging: boolean;
   systems: Record<
     string,
     Omit<System, 'fn'> & { ms: number; diff: Partial<World> }
   >;
+  playback: {
+    recording: boolean;
+    history: History<World>;
+    index: number;
+    paused: boolean;
+  };
 };
+export const initDebugState = (world: World): DebugState => ({
+  debugging: false,
+  systems: {},
+  playback: {
+    recording: false,
+    history: [world],
+    index: 0,
+    paused: false,
+  },
+});
 
 /**
  * Runs a list of systems in order, and returns the new world state and the list of systems (if debug, they'll have debug info).
@@ -25,26 +43,21 @@ export type DebugState = {
 export function tick(
   world: World,
   systems: System[],
-  isDebugging: boolean,
   debugState: DebugState
 ): { world: World; debug: DebugState };
 export function tick(world: World, systems: System[]): { world: World };
-export function tick(
-  world: World,
-  systems: System[],
-  isDebugging?: boolean,
-  debugState?: DebugState
-) {
+export function tick(world: World, systems: System[], debugState?: DebugState) {
   let state = world;
+  const isDebugging = debugState?.debugging;
 
-  if (isDebugging && debugState) debugState.systems = {};
+  if (isDebugging) debugState.systems = {};
 
   for (const system of systems) {
     const start = performance.now();
     const result = system.fn(structuredClone(state));
     const end = performance.now();
 
-    if (isDebugging && debugState && system.name) {
+    if (isDebugging && system.name) {
       debugState.systems[system.name] = {
         ms: end - start,
         diff: getPartialDiff(state, result),

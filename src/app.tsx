@@ -9,34 +9,141 @@ import {
   tick,
   DebugState,
   calcPerformance,
+  initDebugState,
+  System,
 } from './lib/engine';
 import { init, World, systems } from './lib/world';
 import { structureIsEqual } from './lib/util';
 import { getState, useLocalStorage } from './lib/hooks';
+import Controller from './components/Controller';
+import * as history from './lib/history';
 
 const App = () => {
-  const [debugMode, setDebugMode] = useState(false);
-  const [debug, setDebug] = useState<DebugState>({ systems: {} });
-  const [state, setState] = useLocalStorage<World>('world', init);
-  useEffect(() => {
+  // const [state, setState] = useLocalStorage<World>('world', init);
+  const [state, setState] = useState<World>(init);
+  const [debug, setDebug] = useState<DebugState>(initDebugState(state));
+  const [tickInterval, setTickInterval] = useState<{ clear: () => void }>();
+
+  const setIsPaused = (paused: boolean) =>
+    setDebug((debug) => ({
+      ...debug,
+      playback: { ...debug.playback, paused },
+    }));
+
+  const toggleDebugging = () =>
+    setDebug((debug) => ({
+      ...debug,
+      debugging: !debug.debugging,
+    }));
+
+  const toggleRecording = async () => {
+    const world = await getState(setState);
+    const debug = await getState(setDebug);
+    if (!debug.playback.recording) {
+      // reset history
+      debug.playback.history = [world];
+    }
+    debug.playback.recording = !debug.playback.recording;
+    console.log({ debug });
+    setDebug(debug);
+  };
+
+  const start = () => {
+    console.log('starting...');
+
     const isEqual = structureIsEqual(state, init, true);
     if (!isEqual.isEqual) {
       console.error(isEqual.error, { state, init });
       setState(init);
     }
 
-    stableInterval(async () => {
-      const debugMode = await getState(setDebugMode);
-      const world = await getState(setState);
+    setTickInterval({
+      clear: stableInterval(async () => {
+        const world = await getState(setState);
+        const debug = await getState(setDebug);
+        runTick(world, systems, debug);
+      }, 1000 / FRAME_RATE),
+    });
 
-      const start = performance.now();
-      const result = tick(world, systems, debugMode, debug);
+    setIsPaused(false);
+  };
 
-      if (debugMode) setDebug(result.debug);
+  const stop = () => {
+    console.log('stopping...');
+    tickInterval?.clear();
+    setIsPaused(true);
+  };
 
-      setState(calcPerformance(result.world, performance.now() - start));
-    }, 1000 / FRAME_RATE);
-  }, []);
+  const runTick = (world: World, systems: System[], debug: DebugState) => {
+    const start = performance.now();
+    const result = tick(world, systems, debug);
+
+    if (debug.debugging) {
+      setDebug((debug) => {
+        return {
+          ...debug,
+          ...result.debug,
+        };
+      });
+    }
+
+    result.world = calcPerformance(result.world, performance.now() - start);
+
+    if (debug.playback.recording) {
+      if (debug.playback.index === debug.playback.history.length - 1) {
+        const newHistory = history.forward<World>(
+          debug.playback.history,
+          result.world
+        );
+        setDebug((debug) => ({
+          ...debug,
+          playback: {
+            ...debug.playback,
+            history: newHistory,
+            index: newHistory.length - 1,
+          },
+        }));
+      } else {
+        setDebug((debug) => ({
+          ...debug,
+          playback: {
+            ...debug.playback,
+            index: debug.playback.index + 1,
+          },
+        }));
+      }
+    }
+
+    setState(result.world);
+  };
+
+  const togglePaused = () => {
+    if (debug.playback.paused) start();
+    else stop();
+  };
+
+  const stepForward = async () => {
+    stop();
+    const world = await getState(setState);
+    const debug = await getState(setDebug);
+    runTick(world, systems, debug);
+  };
+
+  const stepBackward = async () => {
+    stop();
+    const debug = await getState(setDebug);
+    const index = Math.max(0, debug.playback.index - 1);
+    setDebug((debug) => ({
+      ...debug,
+      playback: {
+        ...debug.playback,
+        index,
+      },
+    }));
+    setState(history.rollback(debug.playback.history, index));
+  };
+
+  useEffect(() => start(), []);
 
   return (
     <>
@@ -53,15 +160,27 @@ const App = () => {
             width: 'max-content',
           }}
         >
-          <label>
-            Debug
-            <input
-              type="checkbox"
-              checked={debugMode}
-              onChange={() => setDebugMode(!debugMode)}
-            />
-          </label>
-          {debugMode ? <pre>{JSON.stringify(debug, null, 2)}</pre> : null}
+          <Controller
+            isRecording={debug.playback.recording}
+            isDebugging={debug.debugging}
+            isPaused={debug.playback.paused}
+            index={debug.playback.index}
+            length={debug.playback.history.length}
+            onStepForward={stepForward}
+            onStepBackward={stepBackward}
+            onToggleRecording={toggleRecording}
+            onToggleDebugging={toggleDebugging}
+            onTogglePaused={togglePaused}
+          />
+          <button
+            onClick={() => {
+              setState(init);
+              setDebug(initDebugState(init));
+            }}
+          >
+            Reset
+          </button>
+          {debug.debugging ? <pre>{JSON.stringify(debug, null, 2)}</pre> : null}
           <pre>{JSON.stringify(state, null, 2)}</pre>
         </div>
         <div
@@ -99,7 +218,6 @@ const App = () => {
             N2={state.engine.N2.value}
             throttle={state.input.throttle}
           />
-          <button onClick={() => setState(init)}>reset</button>
         </div>
       </div>
     </>
