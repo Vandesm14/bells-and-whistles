@@ -14,6 +14,7 @@ export const constants = {
   },
 };
 
+export type World = typeof init;
 export const init = {
   health: {
     framecount: 0,
@@ -55,12 +56,8 @@ export const init = {
   },
 };
 
-export type World = typeof init;
-
 const C = constants;
-
 export const systems: System[] = feature({
-  // framecount: (world) => ({ ...world, framecount: world.framecount + 1 }),
   fps: (world) => {
     const { health } = world;
 
