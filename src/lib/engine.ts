@@ -6,8 +6,8 @@ export const FRAME_RATE = 30;
 export const perSecond = (constant: number) => constant / FRAME_RATE;
 
 export type SystemFn<T = World> = (state: T) => T;
-export interface System {
-  fn: SystemFn;
+export interface System<T = World> {
+  fn: SystemFn<T>;
   name?: string;
   order?: number;
   path?: string;
@@ -105,7 +105,7 @@ export function calcPerformance(world: World, diff: number) {
 /**
  * Creates a system
  */
-export function system(name: string, fn: SystemFn): System {
+export function system<T = World>(name: string, fn: SystemFn<T>): System<T> {
   return {
     fn,
     name,

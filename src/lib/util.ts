@@ -173,3 +173,7 @@ export function range(start: number, end?: number) {
   }
   return Array.from({ length: end - start }, (_, i) => i + start);
 }
+
+export function dedupe<T>(arr: T[]) {
+  return [...new Set(arr)];
+}
