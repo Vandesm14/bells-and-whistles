@@ -134,11 +134,17 @@ const App = () => {
     const debug = await getState(setDebug);
     const newHistory = history.backward(debug.history);
 
-    setDebug((debug) => ({
-      ...debug,
-      history: newHistory,
-    }));
-    setState(newHistory.value);
+    // If we're at the beginning of the history, don't do anything
+    // This can happen when a user clicks the step backward button
+    // without recording any history. We don't want to reset
+    // the world to the initial state in this case.
+    if (newHistory.list.length !== 0) {
+      setDebug((debug) => ({
+        ...debug,
+        history: newHistory,
+      }));
+      setState(newHistory.value);
+    }
   };
 
   useEffect(() => start(), []);

@@ -54,14 +54,15 @@ export function toIndex<T extends Record<string, any>>(
 }
 
 export function forward<T extends Record<string, any>>(
-  history: History<T>
+  history: History<T>,
+  steps = 1
 ): History<T> {
-  if (history.index === history.list.length) return history;
-  return toIndex(history, history.index + 1);
+  return toIndex(history, history.index + steps);
 }
 
 export function backward<T extends Record<string, any>>(
-  history: History<T>
+  history: History<T>,
+  steps = 1
 ): History<T> {
-  return toIndex(history, history.index - 1);
+  return toIndex(history, history.index - steps);
 }

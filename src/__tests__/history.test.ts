@@ -217,6 +217,23 @@ describe('history', () => {
         index: 0,
       });
     });
+
+    it('should increase by step', () => {
+      let history = generate(base);
+
+      history = push(history, { ...base, a: 2 });
+      history = push(history, { ...base, a: 3 });
+      history = push(history, { ...base, a: 4 });
+
+      history = backward(history, 2);
+
+      expect(history).toEqual({
+        list: [{ a: 2 }, { a: 3 }, { a: 4 }],
+        base,
+        value: { ...base, a: 2 },
+        index: 1,
+      });
+    });
   });
 
   describe('forward', () => {
@@ -251,6 +268,24 @@ describe('history', () => {
         base,
         value: { ...base, a: 4 },
         index: 3,
+      });
+    });
+
+    it('should increase by step', () => {
+      let history = generate(base);
+
+      history = push(history, { ...base, a: 2 });
+      history = push(history, { ...base, a: 3 });
+      history = push(history, { ...base, a: 4 });
+
+      history.index = 0;
+      history = forward(history, 2);
+
+      expect(history).toEqual({
+        list: [{ a: 2 }, { a: 3 }, { a: 4 }],
+        base,
+        value: { ...base, a: 3 },
+        index: 2,
       });
     });
   });
