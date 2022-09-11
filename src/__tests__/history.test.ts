@@ -70,6 +70,24 @@ describe('history', () => {
         index: 1,
       });
     });
+
+    it('should remove future states if index is not equal to length', () => {
+      let history = generate(base);
+
+      history = push(history, { ...base, a: 2 });
+      history = push(history, { ...base, a: 3 });
+      history = push(history, { ...base, a: 4 });
+
+      history = toIndex(history, 1);
+      history = push(history, { ...base, a: 5 });
+
+      expect(history).toEqual({
+        list: [{ a: 2 }, { a: 5 }],
+        base,
+        value: { ...base, a: 5 },
+        index: 2,
+      });
+    });
   });
 
   describe('assemble', () => {

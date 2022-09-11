@@ -14,11 +14,12 @@ import {
 } from './lib/engine';
 import { init, World, systems } from './lib/world';
 import { structureIsEqual } from './lib/util';
-import { getState, useLocalStorage } from './lib/hooks';
+import { getState } from './lib/hooks';
 import Controller from './components/Controller';
 import * as history from './lib/history';
 
 const App = () => {
+  // TODO: Disabling this for now
   // const [state, setState] = useLocalStorage<World>('world', init);
   const [state, setState] = useState<World>(init);
   const [debug, setDebug] = useState<DebugState>(initDebugState(state));
@@ -27,7 +28,7 @@ const App = () => {
   const setIsPaused = (paused: boolean) =>
     setDebug((debug) => ({
       ...debug,
-      playback: { ...debug.playback, paused },
+      paused,
     }));
 
   const toggleDebugging = () =>
@@ -39,13 +40,23 @@ const App = () => {
   const toggleRecording = async () => {
     const world = await getState(setState);
     const debug = await getState(setDebug);
-    if (!debug.playback.recording) {
+    let { recording } = debug;
+
+    let newHistory = debug.history;
+    if (!recording) {
       // reset history
-      debug.playback.history = [world];
+      newHistory = history.generate(world);
     }
-    debug.playback.recording = !debug.playback.recording;
-    console.log({ debug });
-    setDebug(debug);
+    setDebug({
+      ...debug,
+      recording: !recording,
+      history: newHistory,
+    });
+  };
+
+  const togglePaused = () => {
+    if (debug.paused) start();
+    else stop();
   };
 
   const start = () => {
@@ -89,58 +100,45 @@ const App = () => {
 
     result.world = calcPerformance(result.world, performance.now() - start);
 
-    if (debug.playback.recording) {
-      if (debug.playback.index === debug.playback.history.length - 1) {
-        const newHistory = history.forward<World>(
-          debug.playback.history,
-          result.world
-        );
-        setDebug((debug) => ({
-          ...debug,
-          playback: {
-            ...debug.playback,
-            history: newHistory,
-            index: newHistory.length - 1,
-          },
-        }));
-      } else {
-        setDebug((debug) => ({
-          ...debug,
-          playback: {
-            ...debug.playback,
-            index: debug.playback.index + 1,
-          },
-        }));
-      }
+    if (debug.recording) {
+      const newHistory = history.push(debug.history, result.world);
+      setDebug((debug) => ({
+        ...debug,
+        history: newHistory,
+      }));
     }
 
     setState(result.world);
   };
 
-  const togglePaused = () => {
-    if (debug.playback.paused) start();
-    else stop();
-  };
-
   const stepForward = async () => {
     stop();
-    const world = await getState(setState);
     const debug = await getState(setDebug);
-    runTick(world, systems, debug);
+    const world = await getState(setState);
+    const lastIndex = debug.history.index;
+    const newHistory = history.forward(debug.history);
+
+    if (lastIndex === newHistory.index) {
+      runTick(world, systems, debug);
+    } else {
+      setState(newHistory.value);
+      setDebug((debug) => ({
+        ...debug,
+        history: newHistory,
+      }));
+    }
   };
 
   const stepBackward = async () => {
     stop();
     const debug = await getState(setDebug);
-    const index = Math.max(0, debug.playback.index - 1);
+    const newHistory = history.backward(debug.history);
+
     setDebug((debug) => ({
       ...debug,
-      playback: {
-        ...debug.playback,
-        index,
-      },
+      history: newHistory,
     }));
-    setState(history.rollback(debug.playback.history, index));
+    setState(newHistory.value);
   };
 
   useEffect(() => start(), []);
@@ -161,11 +159,11 @@ const App = () => {
           }}
         >
           <Controller
-            isRecording={debug.playback.recording}
+            isRecording={debug.recording}
             isDebugging={debug.debugging}
-            isPaused={debug.playback.paused}
-            index={debug.playback.index}
-            length={debug.playback.history.length}
+            isPaused={debug.paused}
+            index={debug.history.index}
+            length={debug.history.list.length}
             onStepForward={stepForward}
             onStepBackward={stepBackward}
             onToggleRecording={toggleRecording}

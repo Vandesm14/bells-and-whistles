@@ -55,7 +55,7 @@ export default function Debugger({
           Record to History
         </label>
         <p>
-          History entry {index + 1} of {length}
+          History entry {index} of {length}
         </p>
       </div>
       <div>

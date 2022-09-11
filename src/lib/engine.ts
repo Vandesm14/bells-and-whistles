@@ -1,6 +1,6 @@
 import { getPartialDiff } from './util';
 import { World } from './world';
-import { History } from './history';
+import * as history from './history';
 
 export const FRAME_RATE = 30;
 export const perSecond = (constant: number) => constant / FRAME_RATE;
@@ -19,22 +19,16 @@ export type DebugState = {
     string,
     Omit<System, 'fn'> & { ms: number; diff: Partial<World> }
   >;
-  playback: {
-    recording: boolean;
-    history: History<World>;
-    index: number;
-    paused: boolean;
-  };
+  paused: boolean;
+  recording: boolean;
+  history: history.History<World>;
 };
 export const initDebugState = (world: World): DebugState => ({
   debugging: false,
   systems: {},
-  playback: {
-    recording: false,
-    history: [world],
-    index: 0,
-    paused: false,
-  },
+  paused: false,
+  recording: false,
+  history: history.generate(world),
 });
 
 /**
