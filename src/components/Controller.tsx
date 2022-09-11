@@ -59,7 +59,9 @@ export default function Debugger({
         </p>
       </div>
       <div>
-        <button onClick={onStepBackward}>Step Backward</button>
+        <button onClick={onStepBackward} disabled={index === 0}>
+          Step Backward
+        </button>
         {/* play/pause button below */}
         <button onClick={onTogglePaused}>{isPaused ? 'Play' : 'Pause'}</button>
         <button onClick={onStepForward}>Step Forward</button>
