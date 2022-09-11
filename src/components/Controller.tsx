@@ -13,6 +13,7 @@ interface DebuggerProps {
   onToggleDebugging: () => void;
   onTogglePaused: () => void;
   onChangeStep: (step: number) => void;
+  onChangeIndex: (index: number) => void;
   size: number;
 }
 
@@ -28,6 +29,7 @@ export default function Debugger({
   onToggleDebugging,
   onTogglePaused,
   onChangeStep,
+  onChangeIndex,
   size,
 }: DebuggerProps) {
   const [step, setStep] = React.useState(index);
@@ -37,7 +39,7 @@ export default function Debugger({
     onChangeStep(Number(step));
   };
 
-  const stepWillExceedLength = step + index > length && step !== 1;
+  // const stepWillExceedLength = step + index > length && step !== 1;
 
   return (
     <div
@@ -78,13 +80,13 @@ export default function Debugger({
           Time: {(index / FRAME_RATE).toFixed(2)}s of{' '}
           {(length / FRAME_RATE).toFixed(2)}s
           <br />
-          {stepWillExceedLength ? (
+          {/* {stepWillExceedLength ? (
             <span style={{ color: 'red' }}>
               Warning: Next step will exceed history length.
               <br />
               Running this step will run {index + step - length} ticks.
             </span>
-          ) : null}
+          ) : null} */}
         </p>
       </div>
       <div>
@@ -110,6 +112,16 @@ export default function Debugger({
           </select>
         </label>
       </div>
+      <input
+        type="range"
+        min={0}
+        max={length}
+        value={index}
+        step={step}
+        onChange={(e) => {
+          onChangeIndex(Number(e.target.value));
+        }}
+      />
     </div>
   );
 }

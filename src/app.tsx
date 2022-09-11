@@ -68,9 +68,27 @@ const App = () => {
       clear: stableInterval(async () => {
         const world = await getState(setState);
         const debug = await getState(setDebug);
-        const result = runTick(world, systems, debug);
-        setState(result.world);
-        setDebug(result.debug);
+
+        const isAtEndOfHistory =
+          debug.history.index === debug.history.list.length;
+
+        // if we are playing and in the middle of the history,
+        // then we should just play back the history until
+        // we reach the end of the history
+        if (!debug.paused && !isAtEndOfHistory) {
+          const newHistory = history.forward(debug.history, debug.step);
+
+          setState(newHistory.value);
+          setDebug((debug) => ({
+            ...debug,
+            history: newHistory,
+          }));
+        } else {
+          const result = runTick(world, systems, debug);
+
+          setState(result.world);
+          setDebug(result.debug);
+        }
       }, 1000 / FRAME_RATE),
     });
 
@@ -160,6 +178,18 @@ const App = () => {
     }
   };
 
+  const stepTo = async (index: number) => {
+    stop();
+    const debug = await getState(setDebug);
+    const newHistory = history.toIndex(debug.history, index);
+
+    setDebug((debug) => ({
+      ...debug,
+      history: newHistory,
+    }));
+    setState(newHistory.value);
+  };
+
   useEffect(() => start(), []);
 
   return (
@@ -191,6 +221,7 @@ const App = () => {
             onChangeStep={(step) => {
               setDebug((debug) => ({ ...debug, step }));
             }}
+            onChangeIndex={(index) => stepTo(index)}
             size={JSON.stringify(debug.history).length}
           />
           <button
