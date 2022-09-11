@@ -177,7 +177,7 @@ const App = () => {
           <button
             onClick={() => {
               setState(init);
-              // we don't stop or start the sim when resetting (I'm not sure if this is the right behavior)
+              // TODO: we don't stop or start the sim when resetting (I'm not sure if this is the right behavior)
               setDebug({ ...initDebugState(init), paused: debug.paused });
             }}
           >
