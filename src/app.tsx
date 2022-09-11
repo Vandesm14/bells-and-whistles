@@ -12,11 +12,12 @@ import {
   initDebugState,
   System,
 } from './lib/engine';
-import { init, World, systems } from './lib/world';
-import { structureIsEqual } from './lib/util';
+import { init, World, systems, constants } from './lib/world';
+import { applyPartialDiff, structureIsEqual } from './lib/util';
 import { getState } from './lib/hooks';
 import Controller from './components/Controller';
 import * as history from './lib/history';
+import colors from './components/compose/colors';
 
 const App = () => {
   const [state, setState] = useState<World>(init);
@@ -270,28 +271,45 @@ const App = () => {
           }}
         >
           <Switch
-            path="fuel.pump"
-            state={state}
-            setState={setState}
-            text="fuel pump"
+            label="fuel pump"
+            value={state.fuel.pump}
+            onChange={(pump) =>
+              setState(applyPartialDiff(state, { fuel: { pump } }))
+            }
           />
           <Switch
-            path="engine.input.starter"
-            state={state}
-            setState={setState}
-            text="starter"
+            label="starter"
+            value={state.engine.input.starter}
+            onChange={(starter) =>
+              setState(
+                applyPartialDiff(state, { engine: { input: { starter } } })
+              )
+            }
           />
           <Switch
-            path="engine.fuelValve"
-            state={state}
-            setState={setState}
-            text="fuel valve"
+            label="fuel valve"
+            top={{
+              on:
+                state.fuel.avail &&
+                state.engine.N2.value === constants.engine.N2_START,
+              text: 'avail',
+              color: colors.status.green,
+            }}
+            bottom={{
+              on: !state.engine.fuelValve,
+              text: 'on',
+              color: colors.status.blue,
+            }}
+            value={state.engine.fuelValve}
+            onChange={(fuelValve) =>
+              setState(applyPartialDiff(state, { engine: { fuelValve } }))
+            }
           />
           <Slider
             path="input.throttle"
             state={state}
             setState={setState}
-            text="throttle"
+            label="throttle"
           />
           <EngineMfd
             N2={state.engine.N2.value}

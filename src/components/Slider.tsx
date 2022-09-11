@@ -5,15 +5,15 @@ export interface SliderProps {
   state: World;
   setState: React.Dispatch<React.SetStateAction<World>>;
   path: string;
-  text: string;
+  label: string;
 }
 
-export function Slider({ state, setState, path, text }: SliderProps) {
+export function Slider({ state, setState, path, label }: SliderProps) {
   const change: React.ChangeEventHandler<HTMLInputElement> = (e) =>
     setState((world) => KV(world).set(path, Number(e.target.value)).get());
   return (
     <label>
-      {text}
+      {label}
       <input
         type="range"
         min="0"
