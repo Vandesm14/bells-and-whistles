@@ -1,6 +1,6 @@
-import { getPartialDiff } from './util';
 import { World } from './world';
 import * as history from './history';
+import { applyPartialDiff, getPartialDiff } from './util';
 
 export const FRAME_RATE = 30;
 export const perSecond = (constant: number) => constant / FRAME_RATE;
@@ -15,10 +15,6 @@ export interface System {
 
 export type DebugState = {
   debugging: boolean;
-  systems: Record<
-    string,
-    Omit<System, 'fn'> & { ms: number; diff: Partial<World> }
-  >;
   step: number;
   paused: boolean;
   recording: boolean;
@@ -26,7 +22,6 @@ export type DebugState = {
 };
 export const initDebugState = (world: World): DebugState => ({
   debugging: false,
-  systems: {},
   step: 1,
   paused: false,
   recording: false,
@@ -36,33 +31,23 @@ export const initDebugState = (world: World): DebugState => ({
 /**
  * Runs a list of systems in order, and returns the new world state and the list of systems (if debug, they'll have debug info).
  */
-export function tick(
+export async function tick(
   world: World,
   systems: System[],
   debug: DebugState
-): { world: World; debug: DebugState } {
-  let state = world;
-  const isDebugging = debug.debugging;
-  const debugState = debug;
+): Promise<{ world: World; debug: DebugState }> {
+  const transactions: Partial<World>[] = await Promise.all(
+    systems.map(async (system) =>
+      getPartialDiff(world, system.fn(structuredClone(world)))
+    )
+  );
 
-  if (isDebugging) debugState.systems = {};
+  const newWorld = transactions.reduce<World>(
+    (world, transaction) => applyPartialDiff(world, transaction),
+    world
+  );
 
-  for (const system of systems) {
-    const start = performance.now();
-    const result = system.fn(structuredClone(state));
-    const end = performance.now();
-
-    if (isDebugging && system.name) {
-      debugState.systems[system.name] = {
-        ms: end - start,
-        diff: getPartialDiff(state, result),
-      };
-    }
-
-    state = result;
-  }
-
-  return { world: state, debug: debugState };
+  return { world: newWorld, debug };
 }
 
 export function calcPerformance(world: World, diff: number) {
@@ -79,38 +64,11 @@ export function calcPerformance(world: World, diff: number) {
   return { ...world, performance };
 }
 
-// /**
-//  * A wrapper for Object.values() that returns an array of Systems
-//  */
-// export function feature(
-//   obj: Record<string, SystemFn | System[]>,
-//   name?: string
-// ): System[] {
-//   const systems: System[] = [];
-//   for (const key in obj) {
-//     const value = obj[key];
-//     if (Array.isArray(value)) {
-//       systems.push(...value);
-//     } else {
-//       systems.push({
-//         fn: value,
-//         name: key,
-//         path: name ? `${name}.${key}` : key,
-//       });
-//     }
-//   }
-//   return systems;
-// }
-
 /**
  * Creates a system
  */
 export function system(name: string, fn: SystemFn): System {
-  return {
-    fn,
-    name,
-    path: name,
-  };
+  return { fn, name, path: name };
 }
 
 /**

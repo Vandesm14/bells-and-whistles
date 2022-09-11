@@ -96,7 +96,7 @@ const App = () => {
           // then we should stop playing
           stop();
         } else if (!debug.paused) {
-          const result = runTick(world, systems, debug);
+          const result = await runTick(world, systems, debug);
 
           setState(result.world);
           setDebug(result.debug);
@@ -115,9 +115,13 @@ const App = () => {
     setIsPaused(true);
   };
 
-  const runTick = (world: World, systems: System[], debug: DebugState) => {
+  const runTick = async (
+    world: World,
+    systems: System[],
+    debug: DebugState
+  ) => {
     const start = performance.now();
-    let result = tick(world, systems, debug);
+    let result = await tick(world, systems, debug);
 
     if (debug.debugging) {
       result = {
@@ -158,12 +162,12 @@ const App = () => {
     if (extraTicks > 0) {
       let result = { world, debug };
       for (let i = 0; i < extraTicks; i++) {
-        result = runTick(result.world, systems, result.debug);
+        result = await runTick(result.world, systems, result.debug);
       }
       setState(result.world);
       setDebug(result.debug);
     } else if (lastIndex === newHistory.index) {
-      const result = runTick(world, systems, debug);
+      const result = await runTick(world, systems, debug);
       setState(result.world);
       setDebug(result.debug);
     } else {
