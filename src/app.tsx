@@ -19,8 +19,6 @@ import Controller from './components/Controller';
 import * as history from './lib/history';
 
 const App = () => {
-  // TODO: Disabling this for now
-  // const [state, setState] = useLocalStorage<World>('world', init);
   const [state, setState] = useState<World>(init);
   const [debug, setDebug] = useState<DebugState>(initDebugState(state));
   const [tickInterval, setTickInterval] = useState<{ clear: () => void }>();
@@ -179,12 +177,15 @@ const App = () => {
           <button
             onClick={() => {
               setState(init);
-              setDebug(initDebugState(init));
+              // we don't stop or start the sim when resetting (I'm not sure if this is the right behavior)
+              setDebug({ ...initDebugState(init), paused: debug.paused });
             }}
           >
             Reset
           </button>
-          {debug.debugging ? <pre>{JSON.stringify(debug, null, 2)}</pre> : null}
+          {debug.debugging ? (
+            <pre>{JSON.stringify(debug.systems, null, 2)}</pre>
+          ) : null}
           <pre>{JSON.stringify(state, null, 2)}</pre>
         </div>
         <div

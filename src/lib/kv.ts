@@ -1,3 +1,5 @@
+import structuredClone from '@ungap/structured-clone';
+
 export type Store = Record<string, any>;
 
 function last<T>(arr: Array<T>): T {
