@@ -38,11 +38,10 @@ const App = () => {
   const toggleRecording = async () => {
     const world = await getState(setState);
     const debug = await getState(setDebug);
-    let { recording } = debug;
+    const { recording } = debug;
 
     let newHistory = debug.history;
     if (!recording) {
-      // reset history
       newHistory = history.generate(world);
     }
     setDebug({
@@ -58,10 +57,9 @@ const App = () => {
   };
 
   const start = () => {
-    console.log('starting...');
-
     const isEqual = structureIsEqual(state, init, true);
     if (!isEqual.isEqual) {
+      // eslint-disable-next-line no-console
       console.error(isEqual.error, { state, init });
       setState(init);
     }
@@ -78,7 +76,6 @@ const App = () => {
   };
 
   const stop = () => {
-    console.log('stopping...');
     tickInterval?.clear();
     setIsPaused(true);
   };
@@ -114,7 +111,7 @@ const App = () => {
     const debug = await getState(setDebug);
     const world = await getState(setState);
     const lastIndex = debug.history.index;
-    const newHistory = history.forward(debug.history);
+    const newHistory = history.forward(debug.history, debug.step);
 
     if (lastIndex === newHistory.index) {
       runTick(world, systems, debug);
@@ -130,7 +127,7 @@ const App = () => {
   const stepBackward = async () => {
     stop();
     const debug = await getState(setDebug);
-    const newHistory = history.backward(debug.history);
+    const newHistory = history.backward(debug.history, debug.step);
 
     // If we're at the beginning of the history, don't do anything
     // This can happen when a user clicks the step backward button
@@ -173,6 +170,10 @@ const App = () => {
             onToggleRecording={toggleRecording}
             onToggleDebugging={toggleDebugging}
             onTogglePaused={togglePaused}
+            onChangeStep={(step) => {
+              setDebug((debug) => ({ ...debug, step }));
+            }}
+            size={JSON.stringify(debug.history).length}
           />
           <button
             onClick={() => {
@@ -229,4 +230,5 @@ const App = () => {
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 createRoot(document.getElementById('root')!).render(<App />);

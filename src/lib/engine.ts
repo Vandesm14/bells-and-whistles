@@ -19,6 +19,7 @@ export type DebugState = {
     string,
     Omit<System, 'fn'> & { ms: number; diff: Partial<World> }
   >;
+  step: number;
   paused: boolean;
   recording: boolean;
   history: history.History<World>;
@@ -26,6 +27,7 @@ export type DebugState = {
 export const initDebugState = (world: World): DebugState => ({
   debugging: false,
   systems: {},
+  step: 1,
   paused: false,
   recording: false,
   history: history.generate(world),
