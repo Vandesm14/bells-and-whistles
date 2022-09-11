@@ -114,9 +114,17 @@ export function getPartialDiff<T extends Record<string, any>>(
   return diff;
 }
 
+// create a type with all keys of T set to optional
+// recursively for nested objects
+export type PartialDeep<T> = {
+  [P in keyof T]?: T[P] extends (infer U)[]
+    ? PartialDeep<U>[]
+    : PartialDeep<T[P]>;
+};
+
 export function applyPartialDiff<T extends Record<string, any>>(
   a: T,
-  diff: Partial<T>
+  diff: PartialDeep<T>
 ): T {
   const keys = Object.keys(diff);
   const result: T = { ...a };
