@@ -71,11 +71,12 @@ const App = () => {
 
         const isAtEndOfHistory =
           debug.history.index === debug.history.list.length;
+        const isLengthZero = debug.history.list.length === 0;
 
         // if we are playing and in the middle of the history,
         // then we should just play back the history until
         // we reach the end of the history
-        if (!debug.paused && !isAtEndOfHistory) {
+        if (!debug.paused && !isAtEndOfHistory && !isLengthZero) {
           const newHistory = history.forward(debug.history, debug.step);
 
           setState(newHistory.value);
@@ -83,11 +84,23 @@ const App = () => {
             ...debug,
             history: newHistory,
           }));
-        } else {
+        } else if (
+          !debug.paused &&
+          isAtEndOfHistory &&
+          !debug.recording &&
+          !isLengthZero
+        ) {
+          // if we are playing from the debugger and we reach the end of the history,
+          // then we should stop playing
+          stop();
+        } else if (!debug.paused) {
           const result = runTick(world, systems, debug);
 
           setState(result.world);
           setDebug(result.debug);
+        } else {
+          // any weird state, just stop
+          stop();
         }
       }, 1000 / FRAME_RATE),
     });
@@ -226,12 +239,23 @@ const App = () => {
           />
           <button
             onClick={() => {
+              setDebug({
+                ...debug,
+                history: history.generate(state),
+                recording: false,
+              });
+            }}
+          >
+            Reset Debugger
+          </button>
+          <button
+            onClick={() => {
               setState(init);
               // TODO: we don't stop or start the sim when resetting (I'm not sure if this is the right behavior)
               setDebug({ ...initDebugState(init), paused: debug.paused });
             }}
           >
-            Reset
+            Reset ALL
           </button>
           {debug.debugging ? (
             <pre>{JSON.stringify(debug.systems, null, 2)}</pre>
