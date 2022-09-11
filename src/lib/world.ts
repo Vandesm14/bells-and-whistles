@@ -28,7 +28,8 @@ export const init = {
     external: false,
   },
   fuel: {
-    tank: 1_000_000,
+    tank: 60 * 60 * 5, // 5 minutes
+    usage: 0,
     pump: false,
     avail: false,
   },
@@ -64,11 +65,18 @@ export const systems: System[] = feature({
       fuel.avail = fuel.pump && fuel.tank > 0;
       return { ...world, fuel };
     },
-    // tank: (world) => {
-    //   const { fuel } = world;
-    //   fuel.tank -= perSecond(fuel.pressure);
-    //   return { ...world, fuel };
-    // },
+    tank: (world) => {
+      const { fuel, engine } = world;
+      const usage =
+        engine.N2.value *
+        Number(
+          engine.fuelValve && fuel.avail && engine.N2.value > C.engine.N2_START
+        );
+
+      fuel.tank = Math.max(fuel.tank - perSecond(usage), 0);
+      fuel.usage = usage;
+      return { ...world, fuel };
+    },
   }),
   engine: feature({
     starter: (world) => {
