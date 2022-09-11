@@ -1,5 +1,5 @@
 import { changeDetector, interpolation } from './blocks';
-import { feature, perSecond, System } from './engine';
+import { group, perSecond, system, System } from './engine';
 import { lerp, normalize, smooth } from './util';
 
 export const constants = {
@@ -58,14 +58,14 @@ export const init = {
 };
 
 const C = constants;
-export const systems: System[] = feature({
-  fuel: feature({
-    avail: (world) => {
+export const systems: System[] = [
+  ...group('fuel', [
+    system('avail', (world) => {
       const { fuel } = world;
       fuel.avail = fuel.pump && fuel.tank > 0;
       return { ...world, fuel };
-    },
-    tank: (world) => {
+    }),
+    system('tank', (world) => {
       const { fuel, engine } = world;
       const usage =
         engine.N2.value *
@@ -76,10 +76,10 @@ export const systems: System[] = feature({
       fuel.tank = Math.max(fuel.tank - perSecond(usage), 0);
       fuel.usage = usage;
       return { ...world, fuel };
-    },
-  }),
-  engine: feature({
-    starter: (world) => {
+    }),
+  ]),
+  ...group('engine', [
+    system('starter', (world) => {
       const { engine } = world;
 
       if (engine.input.starter) {
@@ -92,8 +92,8 @@ export const systems: System[] = feature({
       }
 
       return { ...world, engine };
-    },
-    throttle: (world) => {
+    }),
+    system('throttle', (world) => {
       const { engine } = world;
 
       const canUse =
@@ -111,8 +111,8 @@ export const systems: System[] = feature({
         ) * Number(canUse);
 
       return { ...world, engine };
-    },
-    N2Total: (world) => {
+    }),
+    system('N2Total', (world) => {
       const { engine } = world;
 
       const total = Math.max(engine.targetN2.starter, engine.targetN2.throttle);
@@ -122,8 +122,8 @@ export const systems: System[] = feature({
       );
 
       return { ...world, engine };
-    },
-    N2RetrigInterp: (world) => {
+    }),
+    system('N2RetrigInterp', (world) => {
       const { engine } = world;
 
       if (engine.targetN2.total.didChange)
@@ -134,8 +134,8 @@ export const systems: System[] = feature({
         );
 
       return { ...world, engine };
-    },
-    N2UpdateInterp: (world) => {
+    }),
+    system('N2UpdateInterp', (world) => {
       const { engine } = world;
 
       if (engine.targetN2.total.value > 0) {
@@ -154,6 +154,6 @@ export const systems: System[] = feature({
       }
 
       return { ...world, engine };
-    },
-  }),
-});
+    }),
+  ]),
+];

@@ -79,44 +79,49 @@ export function calcPerformance(world: World, diff: number) {
   return { ...world, performance };
 }
 
+// /**
+//  * A wrapper for Object.values() that returns an array of Systems
+//  */
+// export function feature(
+//   obj: Record<string, SystemFn | System[]>,
+//   name?: string
+// ): System[] {
+//   const systems: System[] = [];
+//   for (const key in obj) {
+//     const value = obj[key];
+//     if (Array.isArray(value)) {
+//       systems.push(...value);
+//     } else {
+//       systems.push({
+//         fn: value,
+//         name: key,
+//         path: name ? `${name}.${key}` : key,
+//       });
+//     }
+//   }
+//   return systems;
+// }
+
 /**
- * A wrapper for Object.values() that returns an array of Systems
+ * Creates a system
  */
-export function feature(
-  obj: Record<string, SystemFn | System[]>,
-  name?: string
-): System[] {
-  const systems: System[] = [];
-  for (const key in obj) {
-    const value = obj[key];
-    if (Array.isArray(value)) {
-      systems.push(...value);
-    } else {
-      systems.push({
-        fn: value,
-        name: key,
-        path: name ? `${name}.${key}` : key,
-      });
-    }
-  }
-  return systems;
+export function system(name: string, fn: SystemFn): System {
+  return {
+    fn,
+    name,
+    path: name,
+  };
 }
 
 /**
- * Collapses a set of systems into a single system that runs all systems either greater than or less than a value
+ * Pepends a group name the path of systems
  */
-// TODO: I'll halt dev on this for now, unless I need it later (good luck future me)
-// export function collapse(
-//   list: Record<number, System>,
-//   val: number,
-//   mode?: Comparator
-// ): SystemFn {
-//   const comparator = mode ?? 'lte';
-//   const systems = Object.entries(list)
-//     .filter(([key]) => compare(Number(key), comparator, val))
-//     .map(([, system]) => system);
-//   return (world: World) => pipe(...systems)(world);
-// }
+export function group(name: string, systems: System[]): System[] {
+  return systems.map((s) => ({
+    ...s,
+    path: `${name}.${s.path}`,
+  }));
+}
 
 export function stableInterval(fn: () => void, interval: number) {
   let last = Date.now();
