@@ -68,7 +68,9 @@ const App = () => {
       clear: stableInterval(async () => {
         const world = await getState(setState);
         const debug = await getState(setDebug);
-        runTick(world, systems, debug);
+        const result = runTick(world, systems, debug);
+        setState(result.world);
+        setDebug(result.debug);
       }, 1000 / FRAME_RATE),
     });
 
@@ -82,28 +84,32 @@ const App = () => {
 
   const runTick = (world: World, systems: System[], debug: DebugState) => {
     const start = performance.now();
-    const result = tick(world, systems, debug);
+    let result = tick(world, systems, debug);
 
     if (debug.debugging) {
-      setDebug((debug) => {
-        return {
-          ...debug,
+      result = {
+        ...result,
+        debug: {
           ...result.debug,
-        };
-      });
+          ...debug,
+        },
+      };
     }
 
     result.world = calcPerformance(result.world, performance.now() - start);
 
     if (debug.recording) {
       const newHistory = history.push(debug.history, result.world);
-      setDebug((debug) => ({
-        ...debug,
-        history: newHistory,
-      }));
+      result = {
+        ...result,
+        debug: {
+          ...result.debug,
+          history: newHistory,
+        },
+      };
     }
 
-    setState(result.world);
+    return result;
   };
 
   const stepForward = async () => {
@@ -111,10 +117,22 @@ const App = () => {
     const debug = await getState(setDebug);
     const world = await getState(setState);
     const lastIndex = debug.history.index;
+    const nextIndex = lastIndex + debug.step;
     const newHistory = history.forward(debug.history, debug.step);
 
-    if (lastIndex === newHistory.index) {
-      runTick(world, systems, debug);
+    const extraTicks = nextIndex - newHistory.index;
+
+    if (extraTicks > 0) {
+      let result = { world, debug };
+      for (let i = 0; i < extraTicks; i++) {
+        result = runTick(result.world, systems, result.debug);
+      }
+      setState(result.world);
+      setDebug(result.debug);
+    } else if (lastIndex === newHistory.index) {
+      const result = runTick(world, systems, debug);
+      setState(result.world);
+      setDebug(result.debug);
     } else {
       setState(newHistory.value);
       setDebug((debug) => ({

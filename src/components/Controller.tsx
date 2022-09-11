@@ -32,10 +32,12 @@ export default function Debugger({
 }: DebuggerProps) {
   const [step, setStep] = React.useState(index);
 
-  const handleStepChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStep(Number(e.target.value));
-    onChangeStep(Number(e.target.value));
+  const handleStepChange = (step: number) => {
+    setStep(Number(step));
+    onChangeStep(Number(step));
   };
+
+  const stepWillExceedLength = step + index > length && step !== 1;
 
   return (
     <div
@@ -76,9 +78,11 @@ export default function Debugger({
           Time: {(index / FRAME_RATE).toFixed(2)}s of{' '}
           {(length / FRAME_RATE).toFixed(2)}s
           <br />
-          {step + index > length && step !== 1 ? (
+          {stepWillExceedLength ? (
             <span style={{ color: 'red' }}>
-              Warning: Next step will exceed history length
+              Warning: Next step will exceed history length.
+              <br />
+              Running this step will run {index + step - length} ticks.
             </span>
           ) : null}
         </p>
@@ -90,12 +94,15 @@ export default function Debugger({
         <button onClick={onTogglePaused}>{isPaused ? 'Play' : 'Pause'}</button>
         <button onClick={onStepForward}>Step Forward</button>
         <label>
-          <select onChange={handleStepChange}>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="20">20</option>
+          <select
+            onChange={(e) => handleStepChange(Number(e.target.value))}
+            value={step}
+          >
+            <option value={1}>1</option>
+            <option value={2}>2</option>
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
             <option value={FRAME_RATE}>1s</option>
             <option value={FRAME_RATE * 2}>2s</option>
             <option value={FRAME_RATE * 5}>5s</option>

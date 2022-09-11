@@ -39,12 +39,11 @@ export const initDebugState = (world: World): DebugState => ({
 export function tick(
   world: World,
   systems: System[],
-  debugState: DebugState
-): { world: World; debug: DebugState };
-export function tick(world: World, systems: System[]): { world: World };
-export function tick(world: World, systems: System[], debugState?: DebugState) {
+  debug: DebugState
+): { world: World; debug: DebugState } {
   let state = world;
-  const isDebugging = debugState?.debugging;
+  const isDebugging = debug.debugging;
+  const debugState = debug;
 
   if (isDebugging) debugState.systems = {};
 
@@ -63,11 +62,7 @@ export function tick(world: World, systems: System[], debugState?: DebugState) {
     state = result;
   }
 
-  if (isDebugging) {
-    return { world: state, debug: debugState };
-  }
-
-  return { world: state };
+  return { world: state, debug: debugState };
 }
 
 export function calcPerformance(world: World, diff: number) {

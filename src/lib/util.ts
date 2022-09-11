@@ -157,3 +157,11 @@ export function pick<T extends Record<string, any>>(
 export function last<T>(arr: T[]) {
   return arr[arr.length - 1];
 }
+
+export function range(start: number, end?: number) {
+  if (end === undefined) {
+    end = start;
+    start = 0;
+  }
+  return Array.from({ length: end - start }, (_, i) => i + start);
+}
