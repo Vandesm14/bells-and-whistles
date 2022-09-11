@@ -3,14 +3,12 @@ import { FRAME_RATE } from '../lib/engine';
 
 interface DebuggerProps {
   isRecording: boolean;
-  isDebugging: boolean;
   isPaused: boolean;
   index: number;
   length: number;
   onStepForward: () => void;
   onStepBackward: () => void;
   onToggleRecording: () => void;
-  onToggleDebugging: () => void;
   onTogglePaused: () => void;
   onChangeStep: (step: number) => void;
   onChangeIndex: (index: number) => void;
@@ -19,14 +17,12 @@ interface DebuggerProps {
 
 export default function Debugger({
   isRecording,
-  isDebugging,
   isPaused,
   index,
   length,
   onStepForward,
   onStepBackward,
   onToggleRecording,
-  onToggleDebugging,
   onTogglePaused,
   onChangeStep,
   onChangeIndex,
@@ -59,14 +55,6 @@ export default function Debugger({
         <label>
           <input
             type="checkbox"
-            checked={isDebugging}
-            onChange={onToggleDebugging}
-          />
-          Debug
-        </label>
-        <label>
-          <input
-            type="checkbox"
             checked={isRecording}
             onChange={onToggleRecording}
           />
@@ -80,13 +68,6 @@ export default function Debugger({
           Time: {(index / FRAME_RATE).toFixed(2)}s of{' '}
           {(length / FRAME_RATE).toFixed(2)}s
           <br />
-          {/* {stepWillExceedLength ? (
-            <span style={{ color: 'red' }}>
-              Warning: Next step will exceed history length.
-              <br />
-              Running this step will run {index + step - length} ticks.
-            </span>
-          ) : null} */}
         </p>
       </div>
       <div>

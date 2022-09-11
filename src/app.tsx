@@ -18,6 +18,7 @@ import { getState } from './lib/hooks';
 import Controller from './components/Controller';
 import * as history from './lib/history';
 import colors from './components/compose/colors';
+import { Column } from './components/compose/flex';
 
 const App = () => {
   const [state, setState] = useState<World>(init);
@@ -207,117 +208,115 @@ const App = () => {
   useEffect(() => start(), []);
 
   return (
-    <>
-      <div
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+      }}
+    >
+      <Column
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          width: 'max-content',
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            width: 'max-content',
+        <label>
+          <input
+            type="checkbox"
+            checked={debug.debugging}
+            onChange={toggleDebugging}
+          />
+          Debug
+        </label>
+        {debug.debugging ? (
+          <>
+            <Controller
+              isRecording={debug.recording}
+              isPaused={debug.paused}
+              index={debug.history.index}
+              length={debug.history.list.length}
+              onStepForward={stepForward}
+              onStepBackward={stepBackward}
+              onToggleRecording={toggleRecording}
+              onTogglePaused={togglePaused}
+              onChangeStep={(step) => {
+                setDebug((debug) => ({ ...debug, step }));
+              }}
+              onChangeIndex={(index) => stepTo(index)}
+              size={JSON.stringify(debug.history).length}
+            />
+            <button
+              onClick={() => {
+                setDebug({
+                  ...debug,
+                  history: history.generate(state),
+                  recording: false,
+                });
+              }}
+            >
+              Reset Debugger
+            </button>
+            <button
+              onClick={() => {
+                setState(init);
+                // TODO: we don't stop or start the sim when resetting (I'm not sure if this is the right behavior)
+                setDebug({ ...initDebugState(init), paused: debug.paused });
+              }}
+            >
+              Reset ALL
+            </button>
+            <pre>{JSON.stringify(state, null, 2)}</pre>
+          </>
+        ) : null}
+      </Column>
+      <Column
+        style={{
+          width: 'max-content',
+        }}
+      >
+        <Switch
+          label="fuel pump"
+          value={state.fuel.pump}
+          onChange={(pump) =>
+            setState(applyPartialDiff(state, { fuel: { pump } }))
+          }
+        />
+        <Switch
+          label="starter"
+          value={state.engine.input.starter}
+          onChange={(starter) =>
+            setState(
+              applyPartialDiff(state, { engine: { input: { starter } } })
+            )
+          }
+        />
+        <Switch
+          label="fuel valve"
+          top={{
+            on:
+              state.fuel.avail &&
+              state.engine.N2.value === constants.engine.N2_START,
+            text: 'avail',
+            color: colors.status.green,
           }}
-        >
-          <Controller
-            isRecording={debug.recording}
-            isDebugging={debug.debugging}
-            isPaused={debug.paused}
-            index={debug.history.index}
-            length={debug.history.list.length}
-            onStepForward={stepForward}
-            onStepBackward={stepBackward}
-            onToggleRecording={toggleRecording}
-            onToggleDebugging={toggleDebugging}
-            onTogglePaused={togglePaused}
-            onChangeStep={(step) => {
-              setDebug((debug) => ({ ...debug, step }));
-            }}
-            onChangeIndex={(index) => stepTo(index)}
-            size={JSON.stringify(debug.history).length}
-          />
-          <button
-            onClick={() => {
-              setDebug({
-                ...debug,
-                history: history.generate(state),
-                recording: false,
-              });
-            }}
-          >
-            Reset Debugger
-          </button>
-          <button
-            onClick={() => {
-              setState(init);
-              // TODO: we don't stop or start the sim when resetting (I'm not sure if this is the right behavior)
-              setDebug({ ...initDebugState(init), paused: debug.paused });
-            }}
-          >
-            Reset ALL
-          </button>
-          {debug.debugging ? (
-            <pre>{JSON.stringify(debug.systems, null, 2)}</pre>
-          ) : null}
-          <pre>{JSON.stringify(state, null, 2)}</pre>
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            width: 'max-content',
+          bottom={{
+            on: !state.engine.fuelValve,
+            text: 'on',
+            color: colors.status.blue,
           }}
-        >
-          <Switch
-            label="fuel pump"
-            value={state.fuel.pump}
-            onChange={(pump) =>
-              setState(applyPartialDiff(state, { fuel: { pump } }))
-            }
-          />
-          <Switch
-            label="starter"
-            value={state.engine.input.starter}
-            onChange={(starter) =>
-              setState(
-                applyPartialDiff(state, { engine: { input: { starter } } })
-              )
-            }
-          />
-          <Switch
-            label="fuel valve"
-            top={{
-              on:
-                state.fuel.avail &&
-                state.engine.N2.value === constants.engine.N2_START,
-              text: 'avail',
-              color: colors.status.green,
-            }}
-            bottom={{
-              on: !state.engine.fuelValve,
-              text: 'on',
-              color: colors.status.blue,
-            }}
-            value={state.engine.fuelValve}
-            onChange={(fuelValve) =>
-              setState(applyPartialDiff(state, { engine: { fuelValve } }))
-            }
-          />
-          <Slider
-            path="input.throttle"
-            state={state}
-            setState={setState}
-            label="throttle"
-          />
-          <EngineMfd
-            N2={state.engine.N2.value}
-            throttle={state.input.throttle}
-          />
-        </div>
-      </div>
-    </>
+          value={state.engine.fuelValve}
+          onChange={(fuelValve) =>
+            setState(applyPartialDiff(state, { engine: { fuelValve } }))
+          }
+        />
+        <Slider
+          path="input.throttle"
+          state={state}
+          setState={setState}
+          label="throttle"
+        />
+        <EngineMfd N2={state.engine.N2.value} throttle={state.input.throttle} />
+      </Column>
+    </div>
   );
 };
 
