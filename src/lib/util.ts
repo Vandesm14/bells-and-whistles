@@ -142,3 +142,18 @@ export function omit<T extends Record<string, any>>(
   }
   return result;
 }
+
+export function pick<T extends Record<string, any>>(
+  obj: T,
+  keys: Array<keyof T>
+): Pick<T, typeof keys[number]> {
+  const result: Pick<T, typeof keys[number]> = {} as any;
+  for (const key of keys) {
+    result[key] = obj[key];
+  }
+  return result;
+}
+
+export function last<T>(arr: T[]) {
+  return arr[arr.length - 1];
+}
