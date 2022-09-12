@@ -19,6 +19,7 @@ import Controller from './components/Controller';
 import * as history from './lib/history';
 import colors from './components/compose/colors';
 import { Column } from './components/compose/flex';
+import Knob from './components/Knob';
 
 const App = () => {
   const [state, setState] = useState<World>(init);
@@ -268,52 +269,51 @@ const App = () => {
           </>
         ) : null}
       </Column>
-      <Column
-        style={{
-          width: 'max-content',
-        }}
-      >
-        <Switch
-          label="fuel pump"
-          value={state.fuel.pump}
-          onChange={(pump) =>
-            setState(applyPartialDiff(state, { fuel: { pump } }))
-          }
-        />
-        <Switch
-          label="starter"
-          value={state.engine.input.starter}
-          onChange={(starter) =>
-            setState(
-              applyPartialDiff(state, { engine: { input: { starter } } })
-            )
-          }
-        />
-        <Switch
-          label="fuel valve"
-          top={{
-            on:
-              state.fuel.avail &&
-              state.engine.N2.value === constants.engine.N2_START,
-            text: 'avail',
-            color: colors.status.green,
-          }}
-          bottom={{
-            on: !state.engine.fuelValve,
-            text: 'on',
-            color: colors.status.blue,
-          }}
-          value={state.engine.fuelValve}
-          onChange={(fuelValve) =>
-            setState(applyPartialDiff(state, { engine: { fuelValve } }))
-          }
-        />
-        <Slider
-          path="input.throttle"
-          state={state}
-          setState={setState}
-          label="throttle"
-        />
+      <Column maxContent align="right">
+        <Column maxContent center>
+          <Switch
+            label="fuel pump"
+            value={state.fuel.pump}
+            onChange={(pump) =>
+              setState(applyPartialDiff(state, { fuel: { pump } }))
+            }
+          />
+          <Switch
+            label="starter"
+            value={state.engine.input.starter}
+            onChange={(starter) =>
+              setState(
+                applyPartialDiff(state, { engine: { input: { starter } } })
+              )
+            }
+          />
+          <Switch
+            label="fuel valve"
+            top={{
+              on:
+                state.fuel.avail &&
+                state.engine.N2.value === constants.engine.N2_START,
+              text: 'avail',
+              color: colors.status.green,
+            }}
+            bottom={{
+              on: !state.engine.fuelValve,
+              text: 'on',
+              color: colors.status.blue,
+            }}
+            value={state.engine.fuelValve}
+            onChange={(fuelValve) =>
+              setState(applyPartialDiff(state, { engine: { fuelValve } }))
+            }
+          />
+          <Slider
+            path="input.throttle"
+            state={state}
+            setState={setState}
+            label="throttle"
+          />
+          {/* <Knob max={7} step={1} diameter={100} label={'start'} /> */}
+        </Column>
         <EngineMfd N2={state.engine.N2.value} throttle={state.input.throttle} />
       </Column>
     </div>
