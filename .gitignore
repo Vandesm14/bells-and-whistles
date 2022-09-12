@@ -4,6 +4,7 @@ node_modules/
 # build
 dist.zip
 dist/
+.storybook
 
 # typescript
 *.tsbuildinfo
