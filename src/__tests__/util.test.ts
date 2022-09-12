@@ -1,4 +1,8 @@
-import { getPartialDiff, structureIsEqual } from '../lib/util';
+import {
+  comparePathSpecificity,
+  getPartialDiff,
+  structureIsEqual,
+} from '../lib/util';
 
 describe('structureIsEqual', () => {
   it('should return true for equal objects', () => {
@@ -176,5 +180,41 @@ describe('getPartialDiff', () => {
         d: 5,
       },
     });
+  });
+});
+
+describe('comparePathSpecificity', () => {
+  it('should return 0 if the paths are equal', () => {
+    expect(comparePathSpecificity('a.b.c', 'a.b.c')).toBe(0);
+  });
+
+  it('should return 0 if the paths are unrelated', () => {
+    expect(comparePathSpecificity('a.b', 'c.d')).toBe(0);
+    expect(comparePathSpecificity('a.b', 'a.c')).toBe(0);
+  });
+
+  it('should return 1 if the first path is more specific', () => {
+    expect(comparePathSpecificity('a.b.c', 'a.b')).toBe(1);
+    expect(comparePathSpecificity('a.b.c', 'a')).toBe(1);
+  });
+
+  it('should return -1 if the second path is more specific', () => {
+    expect(comparePathSpecificity('a.b', 'a.b.c')).toBe(-1);
+    expect(comparePathSpecificity('a', 'a.b.c')).toBe(-1);
+  });
+
+  it('should sort an array of paths by specificity', () => {
+    const paths = ['a.b.c', 'a.b', 'a.g', 'a', 'a.b.c.d', 'a.b.c.e', 'a.b.c.e'];
+    const sorted = [
+      'a',
+      'a.b',
+      'a.b.c',
+      'a.b.c.d',
+      'a.b.c.e',
+      'a.b.c.e',
+      'a.g',
+    ];
+
+    expect(paths.sort().sort(comparePathSpecificity)).toEqual(sorted);
   });
 });

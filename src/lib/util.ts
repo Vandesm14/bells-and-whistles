@@ -177,3 +177,35 @@ export function range(start: number, end?: number) {
 export function dedupe<T>(arr: T[]) {
   return [...new Set(arr)];
 }
+
+/**
+ * Compares the specificity of two paths such as `a.b.c` and `a.b`.
+ * Returns 1 if a is more specific, -1 if b is more specific, and 0 if they are equal or unrelated.
+ */
+export function comparePathSpecificity(a: string, b: string) {
+  if (a === b) return 0;
+  const aParts = a.split('.');
+  const bParts = b.split('.');
+
+  // if they are equal or unrelated
+  if (aParts.length === bParts.length) {
+    for (let i = 0; i < aParts.length; i++) {
+      if (aParts[i] !== bParts[i]) return 0;
+    }
+    return 0;
+  }
+
+  // if a is more specific or unrelated
+  if (aParts.length > bParts.length) {
+    for (let i = 0; i < bParts.length; i++) {
+      if (aParts[i] !== bParts[i]) return 0;
+    }
+    return 1;
+  }
+
+  // if b is more specific or unrelated
+  for (let i = 0; i < aParts.length; i++) {
+    if (aParts[i] !== bParts[i]) return 0;
+  }
+  return -1;
+}
