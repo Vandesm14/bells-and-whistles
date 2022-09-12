@@ -33,7 +33,7 @@ export function Switch({ label, top, bottom, value, onChange }: SwitchProps) {
   };
 
   const bottomValue = bottom?.on !== undefined ? bottom.on : value;
-  const bottomColor = bottom?.color || colors.white;
+  const bottomColor = bottom?.color || colors.status.white;
 
   const PADDING_W = 4;
   const PADDING_H = 2;

@@ -275,18 +275,30 @@ const App = () => {
           />
           <Switch
             label="starter"
-            value={!state.engine.input.starter}
+            value={state.engine.input.starter}
+            top={{
+              on:
+                state.engine.N2.value < constants.engine.N2_START &&
+                !state.engine.startValve,
+              text: 'avail',
+              color: 'green',
+            }}
+            bottom={{
+              on: state.engine.input.starter,
+              text: 'on',
+              color: 'white',
+            }}
             onChange={(starter) =>
               setState(
                 applyPartialDiff(state, {
-                  engine: { input: { starter: !starter } },
+                  engine: { input: { starter: starter } },
                 })
               )
             }
           />
           <Switch
             label="fuel valve"
-            bottom={{
+            top={{
               text: 'avail',
               color: colors.status.green,
               on:
@@ -294,9 +306,11 @@ const App = () => {
                 state.engine.N2.value >= constants.engine.N2_START &&
                 !state.engine.fuelValve,
             }}
-            value={state.engine.fuelValve}
+            value={!state.engine.fuelValve}
             onChange={(fuelValve) =>
-              setState(applyPartialDiff(state, { engine: { fuelValve } }))
+              setState(
+                applyPartialDiff(state, { engine: { fuelValve: !fuelValve } })
+              )
             }
           />
           <Slider

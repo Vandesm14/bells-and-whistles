@@ -1,11 +1,11 @@
 const colors = {
   status: {
     orange: '#eb6f0a',
-    green: '#2baa4a',
+    green: '#31c350',
     red: '#d0021b',
     blue: '#4a90e2',
+    white: '#ffffff',
   },
-  white: '#ffffff',
 };
 
 export default colors;
