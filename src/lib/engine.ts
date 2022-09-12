@@ -1,4 +1,3 @@
-import { getPartialDiff } from './util';
 import { World } from './world';
 import * as history from './history';
 
@@ -11,6 +10,32 @@ export interface System<T = World> {
   name?: string;
   order?: number;
   path?: string;
+}
+
+/**
+ * Creates a system
+ */
+export function system<T = World>(
+  name: string,
+  fn: SystemFn<T>,
+  opts?: Partial<System<T>>
+): System<T> {
+  return {
+    fn,
+    name,
+    path: name,
+    ...opts,
+  };
+}
+
+/**
+ * Pepends a group name the path of systems
+ */
+export function group(name: string, systems: System[]): System[] {
+  return systems.map((s) => ({
+    ...s,
+    path: `${name}.${s.path}`,
+  }));
 }
 
 export type DebugState = {
@@ -42,27 +67,12 @@ export function tick(
   debug: DebugState
 ): { world: World; debug: DebugState } {
   let state = world;
-  const isDebugging = debug.debugging;
-  const debugState = debug;
-
-  if (isDebugging) debugState.systems = {};
 
   for (const system of systems) {
-    const start = performance.now();
-    const result = system.fn(structuredClone(state));
-    const end = performance.now();
-
-    if (isDebugging && system.name) {
-      debugState.systems[system.name] = {
-        ms: end - start,
-        diff: getPartialDiff(state, result),
-      };
-    }
-
-    state = result;
+    state = system.fn(structuredClone(state));
   }
 
-  return { world: state, debug: debugState };
+  return { world: state, debug };
 }
 
 export function calcPerformance(world: World, diff: number) {
@@ -77,50 +87,6 @@ export function calcPerformance(world: World, diff: number) {
   performance.tick = `${diff}ms (${percentOfMs.toFixed(2)}% of frame)`;
 
   return { ...world, performance };
-}
-
-// /**
-//  * A wrapper for Object.values() that returns an array of Systems
-//  */
-// export function feature(
-//   obj: Record<string, SystemFn | System[]>,
-//   name?: string
-// ): System[] {
-//   const systems: System[] = [];
-//   for (const key in obj) {
-//     const value = obj[key];
-//     if (Array.isArray(value)) {
-//       systems.push(...value);
-//     } else {
-//       systems.push({
-//         fn: value,
-//         name: key,
-//         path: name ? `${name}.${key}` : key,
-//       });
-//     }
-//   }
-//   return systems;
-// }
-
-/**
- * Creates a system
- */
-export function system<T = World>(name: string, fn: SystemFn<T>): System<T> {
-  return {
-    fn,
-    name,
-    path: name,
-  };
-}
-
-/**
- * Pepends a group name the path of systems
- */
-export function group(name: string, systems: System[]): System[] {
-  return systems.map((s) => ({
-    ...s,
-    path: `${name}.${s.path}`,
-  }));
 }
 
 export function stableInterval(fn: () => void, interval: number) {
