@@ -6,13 +6,23 @@ export interface SwitchProps {
   top?: {
     text?: string;
     color?: string;
+    /**
+     * Turns on the top indicator
+     */
     on: boolean;
   };
   bottom?: {
     text?: string;
     color?: string;
-    on: boolean;
+    /**
+     * Turns on the bottom indicator
+     * Optional: Defaults to `value`
+     */
+    on?: boolean;
   };
+  /**
+   * The value of the switch (will also control the bottom indicator if `bottom.on` is not set)
+   */
   value: boolean;
   onChange: (value: boolean) => void;
 }
@@ -22,7 +32,7 @@ export function Switch({ label, top, bottom, value, onChange }: SwitchProps) {
     onChange(!value);
   };
 
-  const bottomValue = bottom !== undefined ? bottom.on : value;
+  const bottomValue = bottom?.on !== undefined ? bottom.on : value;
   const bottomColor = bottom?.color || colors.white;
 
   const PADDING_W = 4;
@@ -72,12 +82,12 @@ export function Switch({ label, top, bottom, value, onChange }: SwitchProps) {
         <b
           style={{
             color: bottomColor,
-            border: !bottomValue ? `${BORDER}px solid ${bottomColor}` : 'none',
-            margin: bottomValue ? `${BORDER}px 0` : '0', // compensating for the border
+            border: bottomValue ? `${BORDER}px solid ${bottomColor}` : 'none',
+            margin: !bottomValue ? `${BORDER}px 0` : '0', // compensating for the border
             ...commonText,
           }}
         >
-          {!bottomValue ? String(bottom?.text || 'off').toUpperCase() : null}
+          {bottomValue ? String(bottom?.text || 'off').toUpperCase() : null}
         </b>
         <input
           type="checkbox"

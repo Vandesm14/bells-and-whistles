@@ -268,33 +268,31 @@ const App = () => {
         <Column maxContent center>
           <Switch
             label="fuel pump"
-            value={state.fuel.pump}
+            value={!state.fuel.pump}
             onChange={(pump) =>
-              setState(applyPartialDiff(state, { fuel: { pump } }))
+              setState(applyPartialDiff(state, { fuel: { pump: !pump } }))
             }
           />
           <Switch
             label="starter"
-            value={state.engine.input.starter}
+            value={!state.engine.input.starter}
             onChange={(starter) =>
               setState(
-                applyPartialDiff(state, { engine: { input: { starter } } })
+                applyPartialDiff(state, {
+                  engine: { input: { starter: !starter } },
+                })
               )
             }
           />
           <Switch
             label="fuel valve"
-            top={{
-              on:
-                state.fuel.avail &&
-                state.engine.N2.value === constants.engine.N2_START,
+            bottom={{
               text: 'avail',
               color: colors.status.green,
-            }}
-            bottom={{
-              on: !state.engine.fuelValve,
-              text: 'on',
-              color: colors.status.blue,
+              on:
+                state.fuel.avail &&
+                state.engine.N2.value >= constants.engine.N2_START &&
+                !state.engine.fuelValve,
             }}
             value={state.engine.fuelValve}
             onChange={(fuelValve) =>
