@@ -21,11 +21,7 @@ interface CustomKnobSkinProps extends KnobProps {
 
 function CustomKnobSkin(props: CustomKnobSkinProps): JSX.Element {
   const [angle, setAngle] = useAngleUpdater(props.value);
-  const [isActive, setIsActive] = React.useState(false);
-  const theme = props.theme || {};
-  const activeColor = theme.activeColor || '#b56a7a';
-  const defaultColor = theme.defaultColor || '#100';
-  const bgrColor = isActive ? activeColor : defaultColor;
+  const [, setIsActive] = React.useState(false);
   const angleChangeHandler = composeTwo<number>(setAngle, props.onAngleChange);
   const interactionChangeHandler = composeTwo<boolean>(
     setIsActive,

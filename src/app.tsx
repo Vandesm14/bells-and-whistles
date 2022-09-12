@@ -19,7 +19,6 @@ import Controller from './components/Controller';
 import * as history from './lib/history';
 import colors from './components/compose/colors';
 import { Column } from './components/compose/flex';
-import Knob from './components/Knob';
 
 const App = () => {
   const [state, setState] = useState<World>(init);
@@ -215,11 +214,7 @@ const App = () => {
         gridTemplateColumns: '1fr 1fr',
       }}
     >
-      <Column
-        style={{
-          width: 'max-content',
-        }}
-      >
+      <Column maxContent>
         <label>
           <input
             type="checkbox"
@@ -312,7 +307,6 @@ const App = () => {
             setState={setState}
             label="throttle"
           />
-          {/* <Knob max={7} step={1} diameter={100} label={'start'} /> */}
         </Column>
         <EngineMfd N2={state.engine.N2.value} throttle={state.input.throttle} />
       </Column>
