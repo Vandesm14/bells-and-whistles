@@ -12,7 +12,7 @@ import {
   initDebugState,
   System,
 } from './lib/engine';
-import { init, World, systems, constants } from './lib/world';
+import { init, World, systems, constants, fuelIsAvail } from './lib/world';
 import { applyPartialDiff, structureIsEqual } from './lib/util';
 import { getState } from './lib/hooks';
 import Controller from './components/Controller';
@@ -302,7 +302,7 @@ const App = () => {
               text: 'avail',
               color: colors.status.green,
               on:
-                state.fuel.avail &&
+                fuelIsAvail(state) &&
                 state.engine.N2.value >= constants.engine.N2_START &&
                 !state.engine.fuelValve,
             }}

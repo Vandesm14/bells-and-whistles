@@ -31,7 +31,6 @@ export const init = {
     tank: 60 * 60 * 5, // 5 minutes
     usage: 0,
     pump: false,
-    avail: false,
   },
   engine: {
     // State
@@ -57,12 +56,16 @@ export const init = {
   },
 };
 
+export const fuelIsAvail = (world: World) => {
+  const { fuel } = world;
+  return fuel.pump && fuel.tank > 0;
+};
+
 const C = constants;
 export const systems: System[] = [
   ...group('fuel', [
     system('avail', (world) => {
       const { fuel } = world;
-      fuel.avail = fuel.pump && fuel.tank > 0;
       return { ...world, fuel };
     }),
     system('tank', (world) => {
@@ -70,7 +73,9 @@ export const systems: System[] = [
       const usage =
         engine.N2.value *
         Number(
-          engine.fuelValve && fuel.avail && engine.N2.value > C.engine.N2_START
+          engine.fuelValve &&
+            fuelIsAvail(world) &&
+            engine.N2.value > C.engine.N2_START
         );
 
       fuel.tank = Math.max(fuel.tank - perSecond(usage), 0);
@@ -97,7 +102,7 @@ export const systems: System[] = [
       const { engine } = world;
 
       const canUse =
-        world.fuel.avail &&
+        fuelIsAvail(world) &&
         engine.fuelValve &&
         engine.N2.value >= C.engine.N2_START;
 
