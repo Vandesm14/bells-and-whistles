@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { Slider } from './components/input/Slider';
 import { Switch } from './components/input/Switch';
 import EngineMfd from './components/EngineMfd';
-import { initDebugState } from './lib/engine';
+import { DebugState, initDebugState } from './lib/engine';
 import { initial, World, constants, fuelIsAvail } from './lib/world';
 import { applyPartialDiff } from './lib/util';
 import Controller from './components/Controller';
@@ -15,12 +15,12 @@ import { useStore } from './lib/store';
 const App = () => {
   const store = useStore();
 
-  const { setStore } = store;
-
   useEffect(store.start, []);
 
   const setWorld = (world: World) =>
-    setStore((state) => applyPartialDiff(state, { world }));
+    store.setStore((state) => applyPartialDiff(state, { world }));
+  const setDebug = (debug: DebugState) =>
+    store.setStore((state) => applyPartialDiff(state, { debug }));
   const { world: readWorld, debug: readDebug } = store;
 
   return (
@@ -51,21 +51,17 @@ const App = () => {
               onToggleRecording={store.toggleRecording}
               onTogglePaused={store.togglePaused}
               onChangeStep={(step) =>
-                setStore((state) =>
-                  applyPartialDiff(state, { debug: { step } })
-                )
+                setDebug(applyPartialDiff(readDebug, { step }))
               }
               onChangeIndex={store.stepTo}
               size={JSON.stringify(readDebug.history).length}
             />
             <button
               onClick={() => {
-                setStore((state) =>
-                  applyPartialDiff(state, {
-                    debug: {
-                      history: history.generate(state.world),
-                      recording: false,
-                    },
+                setDebug(
+                  applyPartialDiff(readDebug, {
+                    history: history.generate(readWorld),
+                    recording: false,
                   })
                 );
               }}
@@ -75,15 +71,11 @@ const App = () => {
             <button
               onClick={() => {
                 // TODO: we don't stop or start the sim when resetting (I'm not sure if this is the right behavior)
-                setStore((state) =>
-                  applyPartialDiff(state, {
-                    world: initial,
-                    debug: {
-                      ...initDebugState(initial),
-                      paused: state.debug.paused,
-                    },
-                  })
-                );
+                setWorld(initial);
+                setDebug({
+                  ...initDebugState(initial),
+                  paused: readDebug.paused,
+                });
               }}
             >
               Reset ALL
