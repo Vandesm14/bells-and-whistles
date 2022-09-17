@@ -14,8 +14,8 @@ export const constants = {
   },
 };
 
-export type World = typeof init;
-export const init = {
+export type World = typeof initial;
+export const initial = {
   performance: {
     framecount: 0,
     lastTS: 0,

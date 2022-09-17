@@ -12,7 +12,7 @@ import {
   initDebugState,
   System,
 } from './lib/engine';
-import { init, World, systems, constants, fuelIsAvail } from './lib/world';
+import { initial, World, systems, constants, fuelIsAvail } from './lib/world';
 import { applyPartialDiff, structureIsEqual } from './lib/util';
 import { getState } from './lib/hooks';
 import Controller from './components/Controller';
@@ -21,21 +21,17 @@ import colors from './components/compose/colors';
 import { Column } from './components/compose/flex';
 
 const App = () => {
-  const [state, setState] = useState<World>(init);
+  const [state, setState] = useState<World>(initial);
   const [debug, setDebug] = useState<DebugState>(initDebugState(state));
   const [tickInterval, setTickInterval] = useState<{ clear: () => void }>();
 
   const setIsPaused = (paused: boolean) =>
-    setDebug((debug) => ({
-      ...debug,
-      paused,
-    }));
+    setDebug((debug) => applyPartialDiff(debug, { paused }));
 
   const toggleDebugging = () =>
-    setDebug((debug) => ({
-      ...debug,
-      debugging: !debug.debugging,
-    }));
+    setDebug((debug) =>
+      applyPartialDiff(debug, { debugging: !debug.debugging })
+    );
 
   const toggleRecording = async () => {
     const world = await getState(setState);
@@ -59,11 +55,11 @@ const App = () => {
   };
 
   const start = () => {
-    const isEqual = structureIsEqual(state, init, true);
+    const isEqual = structureIsEqual(state, initial, true);
     if (!isEqual.isEqual) {
       // eslint-disable-next-line no-console
-      console.error(isEqual.error, { state, init });
-      setState(init);
+      console.error(isEqual.error, { state, init: initial });
+      setState(initial);
     }
 
     setTickInterval({
@@ -82,10 +78,7 @@ const App = () => {
           const newHistory = history.forward(debug.history, debug.step);
 
           setState(newHistory.value);
-          setDebug((debug) => ({
-            ...debug,
-            history: newHistory,
-          }));
+          setDebug((debug) => applyPartialDiff(debug, { history: newHistory }));
         } else if (
           !debug.paused &&
           isAtEndOfHistory &&
@@ -120,26 +113,14 @@ const App = () => {
     let result = tick(world, systems, debug);
 
     if (debug.debugging) {
-      result = {
-        ...result,
-        debug: {
-          ...result.debug,
-          ...debug,
-        },
-      };
+      result = applyPartialDiff(result, { debug });
     }
 
     result.world = calcPerformance(result.world, performance.now() - start);
 
     if (debug.recording) {
       const newHistory = history.push(debug.history, result.world);
-      result = {
-        ...result,
-        debug: {
-          ...result.debug,
-          history: newHistory,
-        },
-      };
+      setDebug((debug) => applyPartialDiff(debug, { history: newHistory }));
     }
 
     return result;
@@ -168,10 +149,7 @@ const App = () => {
       setDebug(result.debug);
     } else {
       setState(newHistory.value);
-      setDebug((debug) => ({
-        ...debug,
-        history: newHistory,
-      }));
+      setDebug((debug) => applyPartialDiff(debug, { history: newHistory }));
     }
   };
 
@@ -185,10 +163,7 @@ const App = () => {
     // without recording any history. We don't want to reset
     // the world to the initial state in this case.
     if (newHistory.list.length !== 0) {
-      setDebug((debug) => ({
-        ...debug,
-        history: newHistory,
-      }));
+      setDebug((debug) => applyPartialDiff(debug, { history: newHistory }));
       setState(newHistory.value);
     }
   };
@@ -198,10 +173,7 @@ const App = () => {
     const debug = await getState(setDebug);
     const newHistory = history.toIndex(debug.history, index);
 
-    setDebug((debug) => ({
-      ...debug,
-      history: newHistory,
-    }));
+    setDebug((debug) => applyPartialDiff(debug, { history: newHistory }));
     setState(newHistory.value);
   };
 
@@ -253,9 +225,9 @@ const App = () => {
             </button>
             <button
               onClick={() => {
-                setState(init);
+                setState(initial);
                 // TODO: we don't stop or start the sim when resetting (I'm not sure if this is the right behavior)
-                setDebug({ ...initDebugState(init), paused: debug.paused });
+                setDebug({ ...initDebugState(initial), paused: debug.paused });
               }}
             >
               Reset ALL
