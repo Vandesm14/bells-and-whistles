@@ -1,212 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Slider } from './components/input/Slider';
 import { Switch } from './components/input/Switch';
 import EngineMfd from './components/EngineMfd';
-import {
-  stableInterval,
-  FRAME_RATE,
-  tick,
-  DebugState,
-  calcPerformance,
-  initDebugState,
-  System,
-} from './lib/engine';
-import { initial, World, systems, constants, fuelIsAvail } from './lib/world';
-import { applyPartialDiff, structureIsEqual } from './lib/util';
+import { initDebugState } from './lib/engine';
+import { initial, World, constants, fuelIsAvail } from './lib/world';
+import { applyPartialDiff } from './lib/util';
 import Controller from './components/Controller';
 import * as history from './lib/history';
 import colors from './components/compose/colors';
 import { Column } from './components/compose/flex';
-
-interface Store {
-  world: World;
-  debug: DebugState;
-  tickInterval: { clear: () => void };
-}
+import { useStore } from './lib/store';
 
 const App = () => {
-  const [store, setStore] = useState<Store>({
-    world: initial,
-    debug: initDebugState(initial),
-    tickInterval: { clear: () => null },
-  });
+  const store = useStore();
 
-  const toggleDebugging = (state: Store) =>
-    applyPartialDiff(state, { debug: { debugging: !state.debug.debugging } });
+  const { setStore } = store;
 
-  const toggleRecording = (state: Store) => {
-    const { world, debug } = state;
-
-    return applyPartialDiff(state, {
-      debug: {
-        recording: !debug.recording,
-        history: !debug.recording ? history.generate(world) : debug.history,
-      },
-    });
-  };
-
-  const togglePaused = (state: Store) =>
-    state.debug.paused ? start(state) : stop(state);
-
-  const intervalFn = (state: Store) => {
-    const { debug } = state;
-    const isAtEndOfHistory = debug.history.index === debug.history.list.length;
-    const isLengthZero = debug.history.list.length === 0;
-
-    // if we are playing and in the middle of the history,
-    // then we should just play back the history until
-    // we reach the end of the history
-    if (!debug.paused && !isAtEndOfHistory && !isLengthZero) {
-      const newHistory = history.forward(debug.history, debug.step);
-
-      return {
-        ...state,
-        world: newHistory.value,
-        debug: { ...debug, history: newHistory },
-      };
-    } else if (
-      !debug.paused &&
-      isAtEndOfHistory &&
-      !debug.recording &&
-      !isLengthZero
-    ) {
-      // if we are playing from the debugger and we reach the end of the history,
-      // then we should stop playing
-      return {
-        ...state,
-        ...stop(state),
-      };
-    } else if (!debug.paused) {
-      const result = runTick(state, systems);
-
-      return {
-        ...state,
-        ...result,
-      };
-    } else {
-      // any weird state, just stop
-      return {
-        ...state,
-        ...stop(state),
-      };
-    }
-  };
-
-  const start = (state: Store) => {
-    const { world } = state;
-    let newState = state;
-    const isEqual = structureIsEqual(world, initial, true);
-    if (!isEqual.isEqual) {
-      // eslint-disable-next-line no-console
-      console.error(isEqual.error, { state, init: initial });
-      newState = applyPartialDiff(state, { world: initial });
-    }
-
-    return applyPartialDiff(newState, {
-      debug: { paused: false },
-      tickInterval: {
-        clear: stableInterval(() => setStore(intervalFn), 1000 / FRAME_RATE),
-      },
-    });
-  };
-
-  const stop = (state: Store) => {
-    state.tickInterval?.clear();
-    return applyPartialDiff(state, {
-      debug: { paused: true },
-    });
-  };
-
-  const runTick = (state: Store, systems: System[]) => {
-    const start = performance.now();
-    let newState = state;
-    const { world, debug } = state;
-    let result = tick(world, systems, debug);
-
-    newState = applyPartialDiff(newState, {
-      ...result,
-    });
-
-    if (debug.debugging) {
-      result = applyPartialDiff(result, { debug });
-    }
-
-    result.world = calcPerformance(result.world, performance.now() - start);
-
-    if (debug.recording) {
-      const newHistory = history.push(debug.history, result.world);
-      newState = applyPartialDiff(newState, {
-        debug: { history: newHistory },
-      });
-    }
-
-    return newState;
-  };
-
-  const stepForward = (state: Store) => {
-    stop(state);
-    const { debug } = state;
-
-    const lastIndex = debug.history.index;
-    const nextIndex = lastIndex + debug.step;
-    const newHistory = history.forward(debug.history, debug.step);
-
-    const extraTicks = nextIndex - newHistory.index;
-
-    if (extraTicks > 0) {
-      let newState = state;
-      for (let i = 0; i < extraTicks; i++) {
-        newState = runTick(state, systems);
-      }
-
-      return applyPartialDiff(state, {
-        ...newState,
-      });
-    } else if (lastIndex === newHistory.index) {
-      const result = runTick(state, systems);
-
-      return applyPartialDiff(state, {
-        ...result,
-      });
-    } else {
-      return applyPartialDiff(state, {
-        world: newHistory.value,
-        debug: { history: newHistory },
-      });
-    }
-  };
-
-  const stepBackward = (state: Store) => {
-    stop(state);
-
-    const { debug } = state;
-    const newHistory = history.backward(debug.history, debug.step);
-
-    // Don't do anything if there is no history
-    if (newHistory.list.length !== 0) {
-      return applyPartialDiff(state, {
-        world: newHistory.value,
-        debug: { history: newHistory },
-      });
-    }
-
-    return state;
-  };
-
-  const stepTo = (state: Store, index: number) => {
-    stop(state);
-
-    const { debug } = state;
-    const newHistory = history.toIndex(debug.history, index);
-
-    return applyPartialDiff(state, {
-      world: newHistory.value,
-      debug: { history: newHistory },
-    });
-  };
-
-  useEffect(() => setStore(start), []);
+  useEffect(store.start, []);
 
   const setWorld = (world: World) =>
     setStore((state) => applyPartialDiff(state, { world }));
@@ -224,7 +35,7 @@ const App = () => {
           <input
             type="checkbox"
             checked={readDebug.debugging}
-            onChange={() => setStore(toggleDebugging)}
+            onChange={() => store.toggleDebugging()}
           />
           Debug
         </label>
@@ -235,18 +46,16 @@ const App = () => {
               isPaused={readDebug.paused}
               index={readDebug.history.index}
               length={readDebug.history.list.length}
-              onStepForward={() => setStore(stepForward)}
-              onStepBackward={() => setStore(stepBackward)}
-              onToggleRecording={() => setStore(toggleRecording)}
-              onTogglePaused={() => setStore(togglePaused)}
+              onStepForward={store.stepForward}
+              onStepBackward={store.stepBackward}
+              onToggleRecording={store.toggleRecording}
+              onTogglePaused={store.togglePaused}
               onChangeStep={(step) =>
                 setStore((state) =>
                   applyPartialDiff(state, { debug: { step } })
                 )
               }
-              onChangeIndex={(index) =>
-                setStore((state) => stepTo(state, index))
-              }
+              onChangeIndex={store.stepTo}
               size={JSON.stringify(readDebug.history).length}
             />
             <button
@@ -279,7 +88,7 @@ const App = () => {
             >
               Reset ALL
             </button>
-            <pre>{JSON.stringify(store.world, null, 2)}</pre>
+            <pre>{JSON.stringify(store.debug, null, 2)}</pre>
           </>
         ) : null}
       </Column>
