@@ -5,7 +5,7 @@ import Knob, {
   useAngleUpdater,
   SkinWrap,
 } from 'react-dial-knob';
-import { Column } from './compose/flex';
+import { Column } from '../compose/flex';
 
 // Define theme props for the new skin
 interface CustomKnobSkinTheme {

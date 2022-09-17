@@ -1,5 +1,5 @@
-import colors from './compose/colors';
-import { Column } from './compose/flex';
+import colors from '../compose/colors';
+import { Column } from '../compose/flex';
 
 export interface SwitchProps {
   label?: string;

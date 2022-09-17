@@ -1,6 +1,6 @@
-import { KV } from '../lib/kv';
+import { KV } from '../../lib/kv';
 import type React from 'react';
-import { World } from '../lib/world';
+import { World } from '../../lib/world';
 
 export interface MomentaryProps {
   setState: React.Dispatch<React.SetStateAction<World>>;

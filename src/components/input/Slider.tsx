@@ -1,5 +1,5 @@
-import { KV } from '../lib/kv';
-import { World } from '../lib/world';
+import { KV } from '../../lib/kv';
+import { World } from '../../lib/world';
 
 export interface SliderProps {
   state: World;

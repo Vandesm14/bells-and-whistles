@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Slider } from './components/Slider';
-import { Switch } from './components/Switch';
+import { Slider } from './components/input/Slider';
+import { Switch } from './components/input/Switch';
 import EngineMfd from './components/EngineMfd';
 import {
   stableInterval,
