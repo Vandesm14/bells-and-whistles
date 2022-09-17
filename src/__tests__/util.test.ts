@@ -1,4 +1,5 @@
 import {
+  applyPartialDiff,
   comparePathSpecificity,
   getPartialDiff,
   structureIsEqual,
@@ -216,5 +217,90 @@ describe('comparePathSpecificity', () => {
     ];
 
     expect(paths.sort().sort(comparePathSpecificity)).toEqual(sorted);
+  });
+});
+
+describe('applyPartialDiff', () => {
+  it('should apply a shallow diff', () => {
+    const state = {
+      a: 1,
+      b: 2,
+      c: 3,
+    };
+    const diff = {
+      b: 4,
+    };
+
+    expect(applyPartialDiff(state, diff)).toEqual({
+      a: 1,
+      b: 4,
+      c: 3,
+    });
+  });
+
+  it('should apply a deep diff', () => {
+    const state = {
+      a: 1,
+      b: 2,
+      c: {
+        d: 4,
+      },
+    };
+    const diff = {
+      c: {
+        d: 5,
+      },
+    };
+
+    expect(applyPartialDiff(state, diff)).toEqual({
+      a: 1,
+      b: 2,
+      c: {
+        d: 5,
+      },
+    });
+  });
+
+  it('should not overwrite nested objects', () => {
+    const state = {
+      a: 1,
+      b: 2,
+      c: {
+        d: 4,
+        e: 5,
+      },
+    };
+    const diff = {
+      c: {
+        d: 5,
+      },
+    };
+
+    expect(applyPartialDiff(state, diff)).toEqual({
+      a: 1,
+      b: 2,
+      c: {
+        d: 5,
+        e: 5,
+      },
+    });
+  });
+
+  it('should ignore arrays', () => {
+    const state = {
+      a: 1,
+      b: 2,
+      c: [3, 4, 5],
+    };
+    const diff = {
+      a: 2,
+      c: [6, 7, 8],
+    };
+
+    expect(applyPartialDiff(state, diff)).toEqual({
+      a: 2,
+      b: 2,
+      c: [3, 4, 5],
+    });
   });
 });

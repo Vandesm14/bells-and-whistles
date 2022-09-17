@@ -3,14 +3,14 @@ import { World } from '../../lib/world';
 
 export interface SliderProps {
   state: World;
-  setState: React.Dispatch<React.SetStateAction<World>>;
+  setState: (world: World) => void;
   path: string;
   label: string;
 }
 
 export function Slider({ state, setState, path, label }: SliderProps) {
   const change: React.ChangeEventHandler<HTMLInputElement> = (e) =>
-    setState((world) => KV(world).set(path, Number(e.target.value)).get());
+    setState(KV(state).set(path, Number(e.target.value)).get());
   return (
     <label>
       {label}

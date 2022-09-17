@@ -129,7 +129,9 @@ export function applyPartialDiff<T extends Record<string, any>>(
   const keys = Object.keys(diff);
   const result: T = { ...a };
   for (const key of keys) {
-    if (typeof a[key] === 'object' && typeof diff[key] === 'object') {
+    if (Array.isArray(a[key])) {
+      // ignore
+    } else if (typeof a[key] === 'object' && typeof diff[key] === 'object') {
       // @ts-expect-error: yes, string can be used as a key
       result[key] = applyPartialDiff(a[key], diff[key]);
     } else {

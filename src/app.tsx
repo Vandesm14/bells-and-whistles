@@ -50,7 +50,7 @@ const App = () => {
     state.debug.paused ? start(state) : stop(state);
 
   const intervalFn = (state: Store) => {
-    let newState = state;
+    const { debug } = state;
     const isAtEndOfHistory = debug.history.index === debug.history.list.length;
     const isLengthZero = debug.history.list.length === 0;
 
@@ -60,10 +60,11 @@ const App = () => {
     if (!debug.paused && !isAtEndOfHistory && !isLengthZero) {
       const newHistory = history.forward(debug.history, debug.step);
 
-      newState = applyPartialDiff(state, {
+      return {
+        ...state,
         world: newHistory.value,
-        debug: { history: newHistory },
-      });
+        debug: { ...debug, history: newHistory },
+      };
     } else if (
       !debug.paused &&
       isAtEndOfHistory &&
@@ -72,24 +73,24 @@ const App = () => {
     ) {
       // if we are playing from the debugger and we reach the end of the history,
       // then we should stop playing
-      newState = applyPartialDiff(state, {
-        ...stop(newState),
-      });
+      return {
+        ...state,
+        ...stop(state),
+      };
     } else if (!debug.paused) {
-      const result = runTick(state, world, systems, debug);
+      const result = runTick(state, systems);
 
-      newState = {
-        ...newState,
+      return {
+        ...state,
         ...result,
       };
     } else {
       // any weird state, just stop
-      newState = applyPartialDiff(state, {
-        ...stop(newState),
-      });
+      return {
+        ...state,
+        ...stop(state),
+      };
     }
-
-    return newState;
   };
 
   const start = (state: Store) => {
@@ -117,14 +118,10 @@ const App = () => {
     });
   };
 
-  const runTick = (
-    state: Store,
-    world: World,
-    systems: System[],
-    debug: DebugState
-  ) => {
+  const runTick = (state: Store, systems: System[]) => {
     const start = performance.now();
     let newState = state;
+    const { world, debug } = state;
     let result = tick(world, systems, debug);
 
     newState = applyPartialDiff(newState, {
@@ -149,7 +146,7 @@ const App = () => {
 
   const stepForward = (state: Store) => {
     stop(state);
-    const { world, debug } = state;
+    const { debug } = state;
 
     const lastIndex = debug.history.index;
     const nextIndex = lastIndex + debug.step;
@@ -158,16 +155,16 @@ const App = () => {
     const extraTicks = nextIndex - newHistory.index;
 
     if (extraTicks > 0) {
-      let newState = { world, debug };
+      let newState = state;
       for (let i = 0; i < extraTicks; i++) {
-        newState = runTick(state, newState.world, systems, newState.debug);
+        newState = runTick(state, systems);
       }
 
       return applyPartialDiff(state, {
         ...newState,
       });
     } else if (lastIndex === newHistory.index) {
-      const result = runTick(state, world, systems, debug);
+      const result = runTick(state, systems);
 
       return applyPartialDiff(state, {
         ...result,
@@ -213,7 +210,7 @@ const App = () => {
 
   const setWorld = (world: World) =>
     setStore((state) => applyPartialDiff(state, { world }));
-  const { world, debug } = store;
+  const { world: readWorld, debug: readDebug } = store;
 
   return (
     <div
@@ -226,18 +223,18 @@ const App = () => {
         <label>
           <input
             type="checkbox"
-            checked={debug.debugging}
+            checked={readDebug.debugging}
             onChange={() => setStore(toggleDebugging)}
           />
           Debug
         </label>
-        {debug.debugging ? (
+        {readDebug.debugging ? (
           <>
             <Controller
-              isRecording={debug.recording}
-              isPaused={debug.paused}
-              index={debug.history.index}
-              length={debug.history.list.length}
+              isRecording={readDebug.recording}
+              isPaused={readDebug.paused}
+              index={readDebug.history.index}
+              length={readDebug.history.list.length}
               onStepForward={() => setStore(stepForward)}
               onStepBackward={() => setStore(stepBackward)}
               onToggleRecording={() => setStore(toggleRecording)}
@@ -250,7 +247,7 @@ const App = () => {
               onChangeIndex={(index) =>
                 setStore((state) => stepTo(state, index))
               }
-              size={JSON.stringify(debug.history).length}
+              size={JSON.stringify(readDebug.history).length}
             />
             <button
               onClick={() => {
@@ -290,29 +287,29 @@ const App = () => {
         <Column maxContent center>
           <Switch
             label="fuel pump"
-            value={!world.fuel.pump}
+            value={!readWorld.fuel.pump}
             onChange={(pump) =>
-              setWorld(applyPartialDiff(world, { fuel: { pump: !pump } }))
+              setWorld(applyPartialDiff(readWorld, { fuel: { pump: !pump } }))
             }
           />
           <Switch
             label="starter"
-            value={world.engine.input.starter}
+            value={readWorld.engine.input.starter}
             top={{
               on:
-                world.engine.N2.value < constants.engine.N2_START &&
-                !world.engine.startValve,
+                readWorld.engine.N2.value < constants.engine.N2_START &&
+                !readWorld.engine.startValve,
               text: 'avail',
               color: 'green',
             }}
             bottom={{
-              on: world.engine.input.starter,
+              on: readWorld.engine.input.starter,
               text: 'on',
               color: 'white',
             }}
             onChange={(starter) =>
               setWorld(
-                applyPartialDiff(world, {
+                applyPartialDiff(readWorld, {
                   engine: { input: { starter: starter } },
                 })
               )
@@ -324,25 +321,30 @@ const App = () => {
               text: 'avail',
               color: colors.status.green,
               on:
-                fuelIsAvail(world) &&
-                world.engine.N2.value >= constants.engine.N2_START &&
-                !world.engine.fuelValve,
+                fuelIsAvail(readWorld) &&
+                readWorld.engine.N2.value >= constants.engine.N2_START &&
+                !readWorld.engine.fuelValve,
             }}
-            value={!world.engine.fuelValve}
+            value={!readWorld.engine.fuelValve}
             onChange={(fuelValve) =>
               setWorld(
-                applyPartialDiff(world, { engine: { fuelValve: !fuelValve } })
+                applyPartialDiff(readWorld, {
+                  engine: { fuelValve: !fuelValve },
+                })
               )
             }
           />
           <Slider
             path="input.throttle"
-            state={world}
+            state={readWorld}
             setState={setWorld}
             label="throttle"
           />
         </Column>
-        <EngineMfd N2={world.engine.N2.value} throttle={world.input.throttle} />
+        <EngineMfd
+          N2={readWorld.engine.N2.value}
+          throttle={readWorld.input.throttle}
+        />
       </Column>
     </div>
   );
