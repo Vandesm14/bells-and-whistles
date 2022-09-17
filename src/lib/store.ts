@@ -103,15 +103,15 @@ const runTick = (state: State, systems: System[]) => {
   const { world, debug } = state;
   let result = tick(world, systems, debug);
 
-  newState = applyPartialDiff(newState, {
-    ...result,
-  });
-
   if (debug.debugging) {
     result = applyPartialDiff(result, { debug });
   }
 
   result.world = calcPerformance(result.world, performance.now() - start);
+
+  newState = applyPartialDiff(newState, {
+    ...result,
+  });
 
   if (debug.recording) {
     const newHistory = history.push(debug.history, result.world);

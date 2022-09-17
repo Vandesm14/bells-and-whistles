@@ -1,14 +1,11 @@
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Slider } from './components/input/Slider';
 import { Switch } from './components/input/Switch';
-import EngineMfd from './components/EngineMfd';
 import { DebugState, initDebugState } from './lib/engine';
-import { initial, World, constants, fuelIsAvail } from './lib/world';
+import { initial, World } from './lib/world';
 import { applyPartialDiff } from './lib/util';
 import Controller from './components/Controller';
 import * as history from './lib/history';
-import colors from './components/compose/colors';
 import { Column } from './components/compose/flex';
 import { useStore } from './lib/store';
 
@@ -80,71 +77,32 @@ const App = () => {
             >
               Reset ALL
             </button>
-            <pre>{JSON.stringify(store.debug, null, 2)}</pre>
+            <pre>{JSON.stringify(store.world, null, 2)}</pre>
           </>
         ) : null}
       </Column>
       <Column maxContent align="right">
-        <Column maxContent center>
-          <Switch
-            label="fuel pump"
-            value={!readWorld.fuel.pump}
-            onChange={(pump) =>
-              setWorld(applyPartialDiff(readWorld, { fuel: { pump: !pump } }))
-            }
-          />
-          <Switch
-            label="starter"
-            value={readWorld.engine.input.starter}
-            top={{
-              on:
-                readWorld.engine.N2.value < constants.engine.N2_START &&
-                !readWorld.engine.startValve,
-              text: 'avail',
-              color: 'green',
-            }}
-            bottom={{
-              on: readWorld.engine.input.starter,
-              text: 'on',
-              color: 'white',
-            }}
-            onChange={(starter) =>
-              setWorld(
-                applyPartialDiff(readWorld, {
-                  engine: { input: { starter: starter } },
-                })
-              )
-            }
-          />
-          <Switch
-            label="fuel valve"
-            top={{
-              text: 'avail',
-              color: colors.status.green,
-              on:
-                fuelIsAvail(readWorld) &&
-                readWorld.engine.N2.value >= constants.engine.N2_START &&
-                !readWorld.engine.fuelValve,
-            }}
-            value={!readWorld.engine.fuelValve}
-            onChange={(fuelValve) =>
-              setWorld(
-                applyPartialDiff(readWorld, {
-                  engine: { fuelValve: !fuelValve },
-                })
-              )
-            }
-          />
-          <Slider
-            path="input.throttle"
-            state={readWorld}
-            setState={setWorld}
-            label="throttle"
-          />
-        </Column>
-        <EngineMfd
-          N2={readWorld.engine.N2.value}
-          throttle={readWorld.input.throttle}
+        <Switch
+          label="Battery"
+          bottom={{
+            text: readWorld.input.battery ? 'on' : 'off',
+          }}
+          value={readWorld.input.battery}
+          onChange={(battery) =>
+            setWorld(applyPartialDiff(readWorld, { input: { battery } }))
+          }
+        />
+        <Switch
+          label="Reactor"
+          bottom={{
+            text: readWorld.input.reactor.master ? 'on' : 'off',
+          }}
+          value={readWorld.input.reactor.master}
+          onChange={(master) =>
+            setWorld(
+              applyPartialDiff(readWorld, { input: { reactor: { master } } })
+            )
+          }
         />
       </Column>
     </div>

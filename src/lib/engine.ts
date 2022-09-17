@@ -75,6 +75,13 @@ export function tick(
   return { world: state, debug };
 }
 
+export const performanceInit = {
+  framecount: 0,
+  lastTS: 0,
+  ms: 0,
+  fps: 0,
+  tick: '',
+};
 export function calcPerformance(world: World, diff: number) {
   const { performance } = world;
 
