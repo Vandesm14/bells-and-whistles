@@ -1,4 +1,4 @@
-import { lerp } from '../util';
+import { lerp } from '../math';
 
 export interface Interpolation {
   /**

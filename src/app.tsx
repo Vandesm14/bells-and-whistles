@@ -2,12 +2,14 @@ import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Switch } from './components/input/Switch';
 import { DebugState, initDebugState } from './lib/engine';
-import { initial, World } from './lib/world';
+import { initial, queries, World } from './lib/world';
 import { applyPartialDiff } from './lib/util';
 import Controller from './components/Controller';
 import * as history from './lib/history';
 import { Column } from './components/compose/flex';
 import { useStore } from './lib/store';
+import LCD from './components/output/LCD';
+import colors from './components/compose/colors';
 
 const App = () => {
   const store = useStore();
@@ -103,6 +105,21 @@ const App = () => {
               applyPartialDiff(readWorld, { input: { reactor: { master } } })
             )
           }
+        />
+        <LCD
+          value={
+            queries.reactor.canBePowered(readWorld)
+              ? queries.reactor.state(readWorld)
+              : ''
+          }
+          label="Active"
+          ch={5}
+          color={queries.reactor.stateColor(readWorld)}
+        />
+        <LCD
+          value={Math.floor(readWorld.reactor.mwatts * 100)}
+          label="Power"
+          ch={4}
         />
       </Column>
     </div>

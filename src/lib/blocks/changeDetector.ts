@@ -14,7 +14,6 @@ export function generate<T>(initial: T): Detector<T> {
 
 export function detect<T>(detector: Detector<T>, newValue: T) {
   detector.didChange = detector.value !== newValue;
-  detector.last = detector.value;
   detector.value = newValue;
   return detector;
 }

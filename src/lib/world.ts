@@ -1,7 +1,17 @@
+import colors from '../components/compose/colors';
 import { changeDetector, interpolation } from './blocks';
 import { group, performanceInit, perSecond, system, System } from './engine';
+import { smooth } from './math';
 
-export const constants = {};
+export const constants = {
+  reactor: {
+    SELF_POWER: 1,
+  },
+  battery: {
+    KWATTS: 100,
+  },
+};
+const C = constants;
 
 export type World = typeof initial;
 export const initial = {
@@ -14,20 +24,44 @@ export const initial = {
   },
   reactor: {
     temperature: interpolation.generate(),
-    power: 0,
+    mwatts: 0,
     onState: changeDetector.generate(false),
   },
 };
 
-const queries = {
+export const queries = {
   reactor: {
+    isSelfPowered: (world: World) =>
+      world.reactor.mwatts >= C.reactor.SELF_POWER,
     isOn: (world: World) =>
       world.input.reactor.master &&
-      (world.input.battery || world.reactor.power > 1),
+      (world.input.battery || queries.reactor.isSelfPowered(world)),
+    state: (world: World) => {
+      // off, start, on
+      const isOn = queries.reactor.isOn(world);
+      const isSelfPowered = queries.reactor.isSelfPowered(world);
+
+      if (!isOn) return 'off';
+      if (isOn && !isSelfPowered) return 'start';
+      return 'on';
+    },
+    stateColor: (world: World) => {
+      const state = queries.reactor.state(world);
+      if (state === 'off') return colors.status.red;
+      if (state === 'start') return colors.status.orange;
+      return colors.status.green;
+    },
+    canBePowered: (world: World) =>
+      world.input.battery || queries.reactor.isSelfPowered(world),
+  },
+  power: {
+    available: (world: World) => {
+      const battery = C.battery.KWATTS * Number(world.input.battery);
+      const reactor = world.reactor.mwatts;
+      return battery + reactor;
+    },
   },
 };
-
-const C = constants;
 export const systems: System[] = [
   ...group('reactor', [
     system('detect change', (world: World) => {
@@ -51,14 +85,15 @@ export const systems: System[] = [
       } else {
         world.reactor.temperature = interpolation.update(
           world.reactor.temperature,
-          perSecond(1)
+          perSecond(4),
+          smooth
         );
       }
 
       return world;
     }),
     system('power', (world) => {
-      world.reactor.power = world.reactor.temperature.value / 10;
+      world.reactor.mwatts = world.reactor.temperature.value / 10;
       return world;
     }),
   ]),
