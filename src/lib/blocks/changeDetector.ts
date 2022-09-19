@@ -1,13 +1,11 @@
 export interface Detector<T> {
   value: T;
-  last: T;
   didChange: boolean;
 }
 
 export function generate<T>(initial: T): Detector<T> {
   return {
     value: initial,
-    last: initial,
     didChange: false,
   };
 }

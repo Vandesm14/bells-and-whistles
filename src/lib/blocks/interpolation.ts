@@ -16,7 +16,7 @@ export interface Interpolation {
   /**
    * The percentage from start to end
    */
-  t: number;
+  percent: number;
 }
 
 export function generate(): Interpolation {
@@ -24,7 +24,7 @@ export function generate(): Interpolation {
     start: 0,
     end: 0,
     value: 0,
-    t: 1,
+    percent: 1,
   };
 }
 
@@ -35,7 +35,7 @@ export function begin(
 ): Interpolation {
   interpolation.start = start;
   interpolation.end = end;
-  interpolation.t = 0;
+  interpolation.percent = 0;
   interpolation.value = start;
   return interpolation;
 }
@@ -43,24 +43,24 @@ export function begin(
 export function update(
   interpolation: Interpolation,
   rate: number,
-  curve?: (a: number, b: number, t: number) => number
+  curve?: (a: number, b: number, percent: number) => number
 ): Interpolation {
   const curveFn = curve ?? lerp;
 
-  const { start, end, t, value } = interpolation;
+  const { start, end, percent, value } = interpolation;
   const length = Math.abs(start - end);
   const rateToPercent = rate / length;
 
   // if
   //   - overshoot
-  //   - t is greater than or equal to 1
+  //   - percent is greater than or equal to 1
   //   - the next value will overshoot
-  if (rate > length || t >= 1 || Math.abs(value - end) < rate) {
+  if (rate > length || percent >= 1 || Math.abs(value - end) < rate) {
     interpolation.value = end;
-    interpolation.t = 1;
+    interpolation.percent = 1;
   } else {
-    interpolation.value = curveFn(start, end, t + rateToPercent);
-    interpolation.t += rateToPercent;
+    interpolation.value = curveFn(start, end, percent + rateToPercent);
+    interpolation.percent += rateToPercent;
   }
   return interpolation;
 }
