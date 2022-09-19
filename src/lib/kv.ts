@@ -15,6 +15,8 @@ export interface KV {
   set(key: string, value: any, opts?: SetOptions): KV;
   bulkSet(arr: Array<[string, any]>): KV;
   delete(key: string): KV;
+
+  toggle(key: string, defaultValue?: boolean): KV;
 }
 
 export function KV(init?: Store): KV {
@@ -73,6 +75,15 @@ export function KV(init?: Store): KV {
       delete store[last(keys)];
       return this;
     },
+
+    // Special Methods
+    toggle(key: string) {
+      const value = this.get(key);
+      if (typeof value === 'boolean') {
+        this.set(key, !value);
+      }
+      return this;
+    },
   };
 }
 
@@ -95,6 +106,12 @@ export function KVMut(init?: Store): KV {
     },
     delete(key: string) {
       kv = kv.delete(key);
+      return this;
+    },
+
+    // Special Methods
+    toggle(key: string, defaultValue?: boolean) {
+      kv = kv.toggle(key, defaultValue);
       return this;
     },
   };

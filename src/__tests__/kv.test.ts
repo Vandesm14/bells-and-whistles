@@ -134,6 +134,24 @@ describe('kv', () => {
       expect(kv.get()).toEqual({});
     });
   });
+
+  describe('toggle', () => {
+    it('should toggle a boolean property', () => {
+      let kv = KV();
+
+      kv = kv.set('test/a', true).toggle('test/a');
+
+      expect(kv.get('test/a')).toEqual(false);
+    });
+
+    it('should ignore non-booleans', () => {
+      let kv = KV();
+
+      kv = kv.set('test/a', 1).toggle('test/a');
+
+      expect(kv.get('test/a')).toEqual(1);
+    });
+  });
 });
 
 describe('kvmut', () => {
